@@ -27,5 +27,18 @@ class GameCommand extends ContainerAwareCommand
         $outputHelper->hideCursor();
 
 
+        $output->writeln("<bg=yellow>    </bg=yellow>\n");
+        $output->writeln("<bg=yellow> </bg=yellow>");
+        $output->writeln("<bg=yellow> </bg=yellow>");
+        $output->writeln("<bg=yellow> </bg=yellow>");
+        $output->writeln("<bg=yellow> </bg=yellow>\n");
+
+        $output->writeln("<bg=yellow>  </bg=yellow>");
+        $output->writeln("<bg=yellow> </bg=yellow>");
+        $output->writeln("<bg=yellow> </bg=yellow>");
+        $output->writeln("<bg=yellow> </bg=yellow>\n");
+
+        $output->writeln("<bg=yellow>  </bg=yellow>");
+        $output->writeln(" <bg=yellow>  </bg=yellow>\n");
     }
 }
