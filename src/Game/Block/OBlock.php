@@ -18,4 +18,12 @@ class OBlock extends AbstractBlock
      */
     private $color = 'cyan';
 
+    /**
+     * @var array
+     */
+    private $shape = [
+        '..',
+        '..'
+    ];
+
 }

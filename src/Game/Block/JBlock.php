@@ -18,4 +18,35 @@ class JBlock extends AbstractBlock
      */
     private $color = 'magenta';
 
+    /**
+     * @var int
+     */
+    private $currentIndex = 0;
+
+    /**
+     * @var array
+     */
+    private $shapes = [
+        [
+            ' .',
+            ' .',
+            '..'
+        ],
+        [
+            '.',
+            '...'
+        ],
+        [
+            '..',
+            '.',
+            '.'
+        ],
+        [
+            '...',
+            '  .'
+        ]
+
+
+    ];
+
 }

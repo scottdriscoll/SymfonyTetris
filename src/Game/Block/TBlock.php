@@ -18,4 +18,33 @@ class TBlock extends AbstractBlock
      */
     private $color = 'green';
 
+    /**
+     * @var int
+     */
+    private $currentIndex = 0;
+
+    /**
+     * @var array
+     */
+    private $shapes = [
+        [
+            '...',
+            ' .'
+        ],
+        [
+            ' .',
+            '..',
+            ' .'
+        ],
+        [
+            ' .',
+            '...'
+        ],
+        [
+            '.',
+            '..',
+            '.'
+        ]
+
+    ];
 }

@@ -18,4 +18,24 @@ class ZBlock extends AbstractBlock
      */
     private $color = 'white';
 
+    /**
+     * @var int
+     */
+    private $currentIndex = 0;
+
+    /**
+     * @var array
+     */
+    private $shapes = [
+        [
+            '..',
+            ' ..'
+        ],
+        [
+            ' .',
+            '..',
+            '.'
+        ]
+    ];
+
 }

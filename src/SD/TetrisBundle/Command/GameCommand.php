@@ -28,6 +28,7 @@ class GameCommand extends ContainerAwareCommand
 
 
         $output->writeln("<bg=yellow>    </bg=yellow>\n");
+
         $output->writeln("<bg=yellow> </bg=yellow>");
         $output->writeln("<bg=yellow> </bg=yellow>");
         $output->writeln("<bg=yellow> </bg=yellow>");
@@ -35,10 +36,9 @@ class GameCommand extends ContainerAwareCommand
 
         $output->writeln("<bg=yellow>  </bg=yellow>");
         $output->writeln("<bg=yellow> </bg=yellow>");
-        $output->writeln("<bg=yellow> </bg=yellow>");
         $output->writeln("<bg=yellow> </bg=yellow>\n");
 
-        $output->writeln("<bg=yellow>  </bg=yellow>");
-        $output->writeln(" <bg=yellow>  </bg=yellow>\n");
+        $output->writeln("<bg=green>  </bg=green>");
+        $output->writeln(" <bg=green>  </bg=green>\n");
     }
 }

@@ -19,17 +19,22 @@ class IBlock extends AbstractBlock
     private $color = 'red';
 
     /**
+     * @var int
+     */
+    private $currentIndex = 0;
+
+    /**
      * @var array
      */
     private $shapes = [
         [
-            'O',
-            'O',
-            'O',
-            'O'
+            '.',
+            '.',
+            '.',
+            '.'
         ],
         [
-            'OOOO'
+            '....'
         ]
     ];
 

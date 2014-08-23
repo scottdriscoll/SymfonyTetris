@@ -18,4 +18,24 @@ class SBlock extends AbstractBlock
      */
     private $color = 'blue';
 
+    /**
+     * @var int
+     */
+    private $currentIndex = 0;
+
+    /**
+     * @var array
+     */
+    private $shapes = [
+        [
+            ' ..',
+            '..'
+        ],
+        [
+            '.',
+            '..',
+            ' .'
+        ]
+    ];
+
 }

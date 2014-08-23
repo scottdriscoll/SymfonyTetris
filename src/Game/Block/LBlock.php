@@ -18,4 +18,30 @@ class LBlock extends AbstractBlock
      */
     private $color = 'yellow';
 
+    /**
+     * @var int
+     */
+    private $currentIndex = 0;
+
+    private $shapes = [
+        [
+            '.',
+            '.',
+            '..'
+        ],
+        [
+            '...',
+            '.'
+        ],
+        [
+            '..',
+            ' .',
+            ' .'
+        ],
+        [
+            '  .',
+            '...'
+        ]
+    ];
+
 }
