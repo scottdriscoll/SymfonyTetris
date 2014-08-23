@@ -23,6 +23,9 @@ class LBlock extends AbstractBlock
      */
     private $currentIndex = 0;
 
+    /**
+     * @var array
+     */
     private $shapes = [
         [
             '.',

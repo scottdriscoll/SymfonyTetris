@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use SD\ConsoleHelper\OutputHelper;
+use SD\Game\Engine as GameEngine;
 
 /**
  * @author Scott Driscoll <scott.driscoll@opensoftdev.com>
@@ -26,19 +27,9 @@ class GameCommand extends ContainerAwareCommand
         $outputHelper->disableKeyboardOutput();
         $outputHelper->hideCursor();
 
-
-        $output->writeln("<bg=yellow>    </bg=yellow>\n");
-
-        $output->writeln("<bg=yellow> </bg=yellow>");
-        $output->writeln("<bg=yellow> </bg=yellow>");
-        $output->writeln("<bg=yellow> </bg=yellow>");
-        $output->writeln("<bg=yellow> </bg=yellow>\n");
-
-        $output->writeln("<bg=yellow>  </bg=yellow>");
-        $output->writeln("<bg=yellow> </bg=yellow>");
-        $output->writeln("<bg=yellow> </bg=yellow>\n");
-
-        $output->writeln("<bg=green>  </bg=green>");
-        $output->writeln(" <bg=green>  </bg=green>\n");
+        // Launch game
+        /** @var GameEngine $engine */
+        $engine = $this->getContainer()->get('game.engine');
+        $engine->run();
     }
 }
