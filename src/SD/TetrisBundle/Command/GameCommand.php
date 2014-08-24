@@ -27,9 +27,8 @@ class GameCommand extends ContainerAwareCommand
         $outputHelper->disableKeyboardOutput();
         $outputHelper->hideCursor();
 
-        // Launch game
-        /** @var GameEngine $engine */
-        $engine = $this->getContainer()->get('game.engine');
-        $engine->run();
+        $this->getContainer()->get('game.game_board')->initialize($outputHelper);
+
+        $this->getContainer()->get('game.engine')->run();
     }
 }

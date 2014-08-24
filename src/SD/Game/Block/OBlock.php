@@ -5,7 +5,6 @@
 
 namespace SD\Game\Block;
 
-use SD\ConsoleHelper\OutputHelper;
 use SD\ConsoleHelper\ScreenBuffer;
 
 /**
@@ -18,12 +17,24 @@ class OBlock extends AbstractBlock
      */
     private $color = 'cyan';
 
-    /**
-     * @var array
-     */
-    private $shape = [
-        '..',
-        '..'
-    ];
+    public function __construct()
+    {
+        $this->block = [
+            [
+                'offset' => 0,
+                'shapes' => [
+                    '..',
+                    '..'
+                ]
+            ]
+        ];
+    }
 
+    /**
+     * @param ScreenBuffer $buffer
+     */
+    public function draw(ScreenBuffer $buffer)
+    {
+
+    }
 }
