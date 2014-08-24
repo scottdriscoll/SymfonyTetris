@@ -22,6 +22,11 @@ use SD\Game\Block\BlockFactory;
 class GameBoard
 {
     /**
+     * Scales up the size of the board, keeping the same number of block spaces
+     */
+    const HORIZONTAL_SCALE = 3;
+
+    /**
      * @var int
      */
     private $width;
@@ -67,6 +72,16 @@ class GameBoard
     private $nextBlock;
 
     /**
+     * @var int
+     */
+    private $lastUpdate = 0;
+
+    /**
+     * @var float
+     */
+    private $fallDelay = 0.125;
+
+    /**
      * @DI\InjectParams({
      *     "eventDispatcher" = @DI\Inject("event_dispatcher"),
      *     "buffer" = @DI\Inject("screen_buffer"),
@@ -96,7 +111,7 @@ class GameBoard
     public function initialize(OutputHelper $output)
     {
         $this->output = $output;
-        $this->buffer->initialize($this->width, $this->height + 1);
+        $this->buffer->initialize($this->width * self::HORIZONTAL_SCALE + 20, $this->height + 5);
 
         for ($h = 0; $h < $this->height; $h++) {
             for ($w = 0; $w < $this->width; $w++) {
@@ -109,7 +124,7 @@ class GameBoard
     }
 
     /**
-     * @DI\Observe(Events::HEARTBEAT, priority = -1)
+     * @DI\Observe(Events::HEARTBEAT, priority = 255)
      *
      * @param HeartbeatEvent $event
      */
@@ -131,5 +146,26 @@ class GameBoard
             throw new \Exception('OutputHelper not initialized');
         }
 
+        $this->output->clear();
+        $this->buffer->clearScreen();
+
+        $scaledWidth = $this->width * self::HORIZONTAL_SCALE;
+
+        for ($x = 0; $x < $scaledWidth + 2; $x++) {
+            $this->buffer->putNextValue($x, 0, '-');
+        }
+
+        for ($y = 1; $y < $this->height; $y++) {
+            $this->buffer->putNextValue(0, $y, '|');
+            $this->buffer->putNextValue($scaledWidth + 1, $y, '|');
+        }
+
+        for ($x = 0; $x < $scaledWidth + 2; $x++) {
+            $this->buffer->putNextValue($x, $this->height, '-');
+        }
+
+        $this->buffer->paintChanges($this->output);
+        $this->buffer->nextFrame();
+        $this->output->dump();
     }
 }

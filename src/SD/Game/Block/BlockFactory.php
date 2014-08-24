@@ -28,12 +28,26 @@ class BlockFactory
     ];
 
     /**
+     * @param int $index
+     * @return AbstractBlock
+     * @throws \InvalidArgumentException
+     */
+    public function getBlock($index)
+    {
+        if ($index >= count($this->blockTypes)) {
+            throw new \InvalidArgumentException('bad index');
+        }
+
+        $class = '\\SD\\Game\\Block\\' . $this->blockTypes[$index] . 'Block';
+
+        return new $class();
+    }
+
+    /**
      * @return AbstractBlock
      */
     public function getRandomBlock()
     {
-        $class = '\\SD\\Game\\Block\\' . $this->blockTypes[rand(0, 7)] . 'Block';
-
-        return new $class();
+        return $this->getBlock(rand(0, (count($this->blockTypes) - 1)));
     }
 }
