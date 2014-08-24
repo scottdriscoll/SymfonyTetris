@@ -151,6 +151,7 @@ class GameBoard
 
         $scaledWidth = $this->width * self::HORIZONTAL_SCALE;
 
+        // Draw board
         for ($x = 0; $x < $scaledWidth + 2; $x++) {
             $this->buffer->putNextValue($x, 0, '-');
         }
@@ -163,6 +164,10 @@ class GameBoard
         for ($x = 0; $x < $scaledWidth + 2; $x++) {
             $this->buffer->putNextValue($x, $this->height, '-');
         }
+
+        // Draw next piece
+
+        // Draw current piece
 
         $this->buffer->paintChanges($this->output);
         $this->buffer->nextFrame();

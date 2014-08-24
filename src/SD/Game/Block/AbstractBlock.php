@@ -32,6 +32,38 @@ abstract class AbstractBlock
      */
     protected $block = [];
 
+    /**
+     * @param int $xPosition
+     */
+    public function setXPosition($xPosition)
+    {
+        $this->xPosition = $xPosition;
+    }
+
+    /**
+     * @return int
+     */
+    public function getXPosition()
+    {
+        return $this->xPosition;
+    }
+
+    /**
+     * @param int $yPosition
+     */
+    public function setYPosition($yPosition)
+    {
+        $this->yPosition = $yPosition;
+    }
+
+    /**
+     * @return int
+     */
+    public function getYPosition()
+    {
+        return $this->yPosition;
+    }
+
     public function rotate()
     {
         $this->currentIndex++;
