@@ -14,7 +14,7 @@ class ZBlock extends AbstractBlock
 {
     public function __construct()
     {
-        $this->color = 'white';
+        $this->color = 'red';
 
         $this->block = [
             [
