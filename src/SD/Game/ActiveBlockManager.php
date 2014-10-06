@@ -219,7 +219,7 @@ class ActiveBlockManager
      */
     public function onStageCleared(StageClearedEvent $event)
     {
-        if ($this->fallDelay > 0.2) {
+        if ($this->fallDelay > 0.3) {
             $this->fallDelay -= 0.2;
         }
     }
