@@ -116,4 +116,33 @@ abstract class AbstractBlock
             $y++;
         }
     }
+
+    /**
+     * @return string
+     */
+    public function getColor()
+    {
+        return $this->color;
+    }
+
+    /**
+     * @return array
+     */
+    public function getVisibleCoordinates()
+    {
+        $coordinates = [];
+        $yOffset = 0;
+
+        foreach ($this->block[$this->currentIndex]['shapes'] as $row) {
+            for ($xOffset = 0; $xOffset < strlen($row); $xOffset++) {
+                if (substr($row, $xOffset, 1) === '.') {
+                    $coordinates[] = ['x' => $this->xPosition + $xOffset, 'y' => $this->yPosition + $yOffset];
+                }
+            }
+
+            $yOffset++;
+        }
+
+        return $coordinates;
+    }
 }

@@ -10,6 +10,8 @@ use JMS\DiExtraBundle\Annotation as DI;
 use SD\TetrisBundle\Events;
 use SD\TetrisBundle\Event\HeartbeatEvent;
 use SD\TetrisBundle\Event\RedrawEvent;
+use SD\TetrisBundle\Event\BlockReachedBottomEvent;
+use SD\TetrisBundle\Event\LinesClearedEvent;
 use SD\Game\Block\AbstractBlock;
 use SD\ConsoleHelper\ScreenBuffer;
 use SD\ConsoleHelper\OutputHelper;
@@ -57,26 +59,6 @@ class GameBoard
     private $board = [];
 
     /**
-     * @var AbstractBlock
-     */
-    private $activeBlock;
-
-    /**
-     * @var AbstractBlock
-     */
-    private $nextBlock;
-
-    /**
-     * @var int
-     */
-    private $lastUpdate = 0;
-
-    /**
-     * @var float
-     */
-    private $fallDelay = 0.125;
-
-    /**
      * @DI\InjectParams({
      *     "eventDispatcher" = @DI\Inject("event_dispatcher"),
      *     "buffer" = @DI\Inject("screen_buffer"),
@@ -108,21 +90,11 @@ class GameBoard
         $this->output = $output;
         $this->buffer->initialize($this->width * $this->horizontalScale + 20, $this->height + 5);
 
-        for ($h = 0; $h < $this->height; $h++) {
-            for ($w = 0; $w < $this->width; $w++) {
+        for ($h = 1; $h <= $this->height; $h++) {
+            for ($w = 1; $w <= $this->width; $w++) {
                 $this->board[$h][$w] = new GameBoardUnit();
             }
         }
-    }
-
-    /**
-     * @DI\Observe(Events::HEARTBEAT, priority = 255)
-     *
-     * @param HeartbeatEvent $event
-     */
-    public function updateBoard(HeartbeatEvent $event)
-    {
-
     }
 
     /**
@@ -148,20 +120,20 @@ class GameBoard
             $this->buffer->putNextValue($x, 0, '-');
         }
 
-        for ($y = 1; $y < $this->height; $y++) {
+        for ($y = 1; $y < $this->height + 1; $y++) {
             $this->buffer->putNextValue(0, $y, '|');
             $this->buffer->putNextValue($scaledWidth + 1, $y, '|');
         }
 
         for ($x = 0; $x < $scaledWidth + 2; $x++) {
-            $this->buffer->putNextValue($x, $this->height, '-');
+            $this->buffer->putNextValue($x, $this->height + 1, '-');
         }
 
-        for ($y = 0; $y < $this->height - 1; $y++) {
-            for ($x = 0; $x < $this->width; $x++) {
+        for ($y = 1; $y <= $this->height; $y++) {
+            for ($x = 1; $x <= $this->width; $x++) {
                 $color = $this->board[$y][$x]->getColor();
                 for ($i = 0; $i < $this->horizontalScale; $i++) {
-                    $this->buffer->putNextValue($x * $this->horizontalScale + $i + 1, $y + 1, ' ', null, $color);
+                    $this->buffer->putNextValue($x * $this->horizontalScale + $i - 1, $y, ' ', null, $color);
                 }
             }
         }
@@ -174,17 +146,94 @@ class GameBoard
     }
 
     /**
+     * @DI\Observe(Events::BLOCK_REACHED_BOTTOM, priority = 0)
+     *
+     * @param BlockReachedBottomEvent $event
+     */
+    public function blockReachedBottomEvent(BlockReachedBottomEvent $event)
+    {
+        foreach ($event->getBlock()->getVisibleCoordinates() as $coordinates) {
+            $this->board[$coordinates['y']][$coordinates['x']]->setOccupied($event->getBlock()->getColor());
+        }
+
+        $this->testForCompletedLines();
+    }
+
+    /**
      * @param AbstractBlock $block
      *
      * @return bool
      */
-    public function doesBlockFix(AbstractBlock $block)
+    public function doesBlockFit(AbstractBlock $block)
     {
         // Check borders
         if ($block->getXPosition() <= 0 || ($block->getXPosition() + $block->getLength() - 1) > $this->width) {
             return false;
         }
 
+        if ($block->getYPosition() + $block->getHeight() - 1 > $this->height) {
+            return false;
+        }
+
+        // Check already placed blocks
+        foreach ($block->getVisibleCoordinates() as $coordinates) {
+            if ($this->board[$coordinates['y']][$coordinates['x']]->isOccupied()) {
+                return false;
+            }
+        }
+
         return true;
+    }
+
+    private function testForCompletedLines()
+    {
+        $linesCleared = [];
+
+        for ($h = 1; $h <= $this->height; $h++) {
+            for ($w = 1; $w <= $this->width; $w++) {
+                if (!$this->board[$h][$w]->isOccupied()) {
+                    continue 2;
+                }
+            }
+
+            $linesCleared[] = $h;
+        }
+
+        if (empty($linesCleared)) {
+            return;
+        }
+
+        $this->eventDispatcher->dispatch(Events::LINES_CLEARED, new LinesClearedEvent(count($linesCleared)));
+        $this->removedCompletedLines($linesCleared);
+    }
+
+    /**
+     * @param array $lines
+     */
+    private function removedCompletedLines(array $lines)
+    {
+        $newBoard = [];
+
+        // Create the new rows, replacing those that were completed
+        for ($h = 1; $h <= count($lines); $h++) {
+            for ($w = 1; $w <= $this->width; $w++) {
+                $newBoard[$h][$w] = new GameBoardUnit();
+            }
+        }
+
+        // Grab the rows from the game board, ignoring the completed ones
+        for ($h = 1, $y = count($lines) + 1; $h <= $this->height; $h++) {
+            if (in_array($h, $lines)) {
+                continue;
+            }
+
+            for ($w = 1; $w <= $this->width; $w++) {
+                $newBoard[$y][$w] = $this->board[$h][$w];
+            }
+            $y++;
+        }
+
+        // Swap the board
+        $this->board = $newBoard;
     }
 }

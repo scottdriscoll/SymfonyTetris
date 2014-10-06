@@ -32,3 +32,6 @@ services:
         class: SD\ConsoleHelper\Keyboard
     screen_buffer:
         class: SD\ConsoleHelper\ScreenBuffer
+
+parameters:
+    horizontal_scale: 2
