@@ -12,23 +12,22 @@ use SD\ConsoleHelper\ScreenBuffer;
  */
 class TBlock extends AbstractBlock
 {
-    /**
-     * @var string
-     */
-    private $color = 'green';
-
     public function __construct()
     {
+        $this->color = 'green';
+
         $this->block = [
             [
-                'offset' => -1,
+                'length' => 3,
+                'height' => 2,
                 'shapes' => [
                     '...',
                     ' .'
                 ]
             ],
             [
-                'offset' => -1,
+                'length' => 2,
+                'height' => 3,
                 'shapes' => [
                     ' .',
                     '..',
@@ -36,14 +35,16 @@ class TBlock extends AbstractBlock
                 ]
             ],
             [
-                'offset' => -1,
+                'length' => 3,
+                'height' => 2,
                 'shapes' => [
                     ' .',
                     '...'
                 ]
             ],
             [
-                'offset' => -1,
+                'length' => 2,
+                'height' => 3,
                 'shapes' => [
                     '.',
                     '..',
@@ -51,13 +52,5 @@ class TBlock extends AbstractBlock
                 ]
             ]
         ];
-    }
-
-    /**
-     * @param ScreenBuffer $buffer
-     */
-    public function draw(ScreenBuffer $buffer)
-    {
-
     }
 }

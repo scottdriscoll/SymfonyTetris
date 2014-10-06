@@ -35,6 +35,14 @@ class GameBoardUnit
     }
 
     /**
+     * @return bool
+     */
+    public function isOccupied()
+    {
+        return $this->occupied;
+    }
+
+    /**
      * @return string
      */
     public function getColor()

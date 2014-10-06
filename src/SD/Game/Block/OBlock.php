@@ -12,29 +12,19 @@ use SD\ConsoleHelper\ScreenBuffer;
  */
 class OBlock extends AbstractBlock
 {
-    /**
-     * @var string
-     */
-    private $color = 'cyan';
-
     public function __construct()
     {
+        $this->color = 'cyan';
+
         $this->block = [
             [
-                'offset' => 0,
+                'length' => 2,
+                'height' => 2,
                 'shapes' => [
                     '..',
                     '..'
                 ]
             ]
         ];
-    }
-
-    /**
-     * @param ScreenBuffer $buffer
-     */
-    public function draw(ScreenBuffer $buffer)
-    {
-
     }
 }

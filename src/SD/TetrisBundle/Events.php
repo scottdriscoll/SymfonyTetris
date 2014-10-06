@@ -11,6 +11,7 @@ namespace SD\TetrisBundle;
 final class Events
 {
     const HEARTBEAT = 'sd.heartbeat';
+    const REDRAW = 'sd.redraw';
     const KEYBOARD_LEFT = 'sd.keyboard.left';
     const KEYBOARD_RIGHT = 'sd.keyboard.right';
     const KEYBOARD_DOWN = 'sd.keyboard.down';

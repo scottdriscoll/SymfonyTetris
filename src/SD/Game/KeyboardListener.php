@@ -37,7 +37,7 @@ class KeyboardListener
     /**
      * @DI\InjectParams({
      *     "eventDispatcher" = @DI\Inject("event_dispatcher"),
-     *     "keyboardHelper" => @DI\Inject("keyboard_helper"),
+     *     "keyboardHelper" = @DI\Inject("keyboard_helper"),
      * })
      *
      * @param EventDispatcherInterface $eventDispatcher

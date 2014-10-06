@@ -33,6 +33,11 @@ abstract class AbstractBlock
     protected $block = [];
 
     /**
+     * @var string
+     */
+    protected $color;
+
+    /**
      * @param int $xPosition
      */
     public function setXPosition($xPosition)
@@ -46,6 +51,22 @@ abstract class AbstractBlock
     public function getXPosition()
     {
         return $this->xPosition;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLength()
+    {
+        return $this->block[$this->currentIndex]['length'];
+    }
+
+    /**
+     * @return int
+     */
+    public function getHeight()
+    {
+        return $this->block[$this->currentIndex]['height'];
     }
 
     /**
@@ -67,6 +88,7 @@ abstract class AbstractBlock
     public function rotate()
     {
         $this->currentIndex++;
+
         if ($this->currentIndex == count($this->block)) {
             $this->currentIndex = 0;
         }
@@ -74,6 +96,24 @@ abstract class AbstractBlock
 
     /**
      * @param ScreenBuffer $buffer
+     * @param int $horizontalScale
      */
-    abstract public function draw(ScreenBuffer $buffer);
+    public function draw(ScreenBuffer $buffer, $horizontalScale)
+    {
+        $shapes = $this->block[$this->currentIndex]['shapes'];
+        $y = $this->yPosition;
+
+        foreach ($shapes as $row) {
+            for ($i = 0; $i < strlen($row); $i++) {
+                if (substr($row, $i, 1) === '.') {
+                    for ($j = 0; $j < $horizontalScale; $j++) {
+                        $x = ($this->xPosition + $i) * $horizontalScale + $j - 1;
+                        $buffer->putNextValue($x, $y, ' ', null, $this->color);
+                    }
+                }
+            }
+
+            $y++;
+        }
+    }
 }

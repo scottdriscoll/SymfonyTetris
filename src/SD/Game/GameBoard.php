@@ -9,10 +9,10 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use JMS\DiExtraBundle\Annotation as DI;
 use SD\TetrisBundle\Events;
 use SD\TetrisBundle\Event\HeartbeatEvent;
+use SD\TetrisBundle\Event\RedrawEvent;
 use SD\Game\Block\AbstractBlock;
 use SD\ConsoleHelper\ScreenBuffer;
 use SD\ConsoleHelper\OutputHelper;
-use SD\Game\Block\BlockFactory;
 
 /**
  * @DI\Service("game.game_board")
@@ -21,11 +21,6 @@ use SD\Game\Block\BlockFactory;
  */
 class GameBoard
 {
-    /**
-     * Scales up the size of the board, keeping the same number of block spaces
-     */
-    const HORIZONTAL_SCALE = 3;
-
     /**
      * @var int
      */
@@ -37,14 +32,14 @@ class GameBoard
     private $height;
 
     /**
+     * @var int
+     */
+    private $horizontalScale;
+
+    /**
      * @var EventDispatcherInterface $eventDispatcher
      */
     private $eventDispatcher;
-
-    /**
-     * @var BlockFactory
-     */
-    private $blockFactory;
 
     /**
      * @var ScreenBuffer
@@ -85,24 +80,24 @@ class GameBoard
      * @DI\InjectParams({
      *     "eventDispatcher" = @DI\Inject("event_dispatcher"),
      *     "buffer" = @DI\Inject("screen_buffer"),
-     *     "blockFactory" = @DI\Inject("game.block_factory"),
      *     "width" = @DI\Inject("%board_width%"),
-     *     "height" = @DI\Inject("%board_height%")
+     *     "height" = @DI\Inject("%board_height%"),
+     *     "horizontalScale" = @DI\Inject("%horizontal_scale%")
      * })
      *
      * @param EventDispatcherInterface $eventDispatcher
      * @param ScreenBuffer $buffer;
-     * @param BlockFactory $blockFactory
      * @param int $width
      * @param int $height
+     * @param int $horizontalScale
      */
-    public function __construct(EventDispatcherInterface $eventDispatcher, ScreenBuffer $buffer, BlockFactory $blockFactory, $width, $height)
+    public function __construct(EventDispatcherInterface $eventDispatcher, ScreenBuffer $buffer, $width, $height, $horizontalScale)
     {
         $this->eventDispatcher = $eventDispatcher;
         $this->buffer = $buffer;
-        $this->blockFactory = $blockFactory;
         $this->width = $width;
         $this->height = $height;
+        $this->horizontalScale = $horizontalScale;
     }
 
     /**
@@ -111,16 +106,13 @@ class GameBoard
     public function initialize(OutputHelper $output)
     {
         $this->output = $output;
-        $this->buffer->initialize($this->width * self::HORIZONTAL_SCALE + 20, $this->height + 5);
+        $this->buffer->initialize($this->width * $this->horizontalScale + 20, $this->height + 5);
 
         for ($h = 0; $h < $this->height; $h++) {
             for ($w = 0; $w < $this->width; $w++) {
                 $this->board[$h][$w] = new GameBoardUnit();
             }
         }
-
-        $this->activeBlock = $this->blockFactory->getRandomBlock();
-        $this->nextBlock = $this->blockFactory->getRandomBlock();
     }
 
     /**
@@ -134,7 +126,7 @@ class GameBoard
     }
 
     /**
-     * @DI\Observe(Events::HEARTBEAT, priority = 0)
+     * @DI\Observe(Events::HEARTBEAT, priority = 254)
      *
      * @param HeartbeatEvent $event
      *
@@ -149,7 +141,7 @@ class GameBoard
         $this->output->clear();
         $this->buffer->clearScreen();
 
-        $scaledWidth = $this->width * self::HORIZONTAL_SCALE;
+        $scaledWidth = $this->width * $this->horizontalScale;
 
         // Draw board
         for ($x = 0; $x < $scaledWidth + 2; $x++) {
@@ -165,12 +157,34 @@ class GameBoard
             $this->buffer->putNextValue($x, $this->height, '-');
         }
 
-        // Draw next piece
+        for ($y = 0; $y < $this->height - 1; $y++) {
+            for ($x = 0; $x < $this->width; $x++) {
+                $color = $this->board[$y][$x]->getColor();
+                for ($i = 0; $i < $this->horizontalScale; $i++) {
+                    $this->buffer->putNextValue($x * $this->horizontalScale + $i + 1, $y + 1, ' ', null, $color);
+                }
+            }
+        }
 
-        // Draw current piece
+        $this->eventDispatcher->dispatch(Events::REDRAW, new RedrawEvent($this->buffer));
 
         $this->buffer->paintChanges($this->output);
         $this->buffer->nextFrame();
         $this->output->dump();
+    }
+
+    /**
+     * @param AbstractBlock $block
+     *
+     * @return bool
+     */
+    public function doesBlockFix(AbstractBlock $block)
+    {
+        // Check borders
+        if ($block->getXPosition() <= 0 || ($block->getXPosition() + $block->getLength() - 1) > $this->width) {
+            return false;
+        }
+
+        return true;
     }
 }

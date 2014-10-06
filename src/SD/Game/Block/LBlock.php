@@ -12,16 +12,14 @@ use SD\ConsoleHelper\ScreenBuffer;
  */
 class LBlock extends AbstractBlock
 {
-    /**
-     * @var string
-     */
-    private $color = 'yellow';
-
     public function __construct()
     {
+        $this->color = 'yellow';
+
         $this->block = [
             [
-                'offset' => 0,
+                'length' => 2,
+                'height' => 3,
                 'shapes' => [
                     '.',
                     '.',
@@ -29,14 +27,16 @@ class LBlock extends AbstractBlock
                 ]
             ],
             [
-                'offset' => -1,
+                'length' => 3,
+                'height' => 2,
                 'shapes' => [
                     '...',
                     '.'
                 ]
             ],
             [
-                'offset' => 1,
+                'length' => 2,
+                'height' => 3,
                 'shapes' => [
                     '..',
                     ' .',
@@ -44,20 +44,13 @@ class LBlock extends AbstractBlock
                 ]
             ],
             [
-                'offset' => -1,
+                'length' => 3,
+                'height' => 2,
                 'shapes' => [
                     '  .',
                     '...'
                 ]
             ]
         ];
-    }
-
-    /**
-     * @param ScreenBuffer $buffer
-     */
-    public function draw(ScreenBuffer $buffer)
-    {
-
     }
 }

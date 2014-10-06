@@ -12,23 +12,22 @@ use SD\ConsoleHelper\ScreenBuffer;
  */
 class ZBlock extends AbstractBlock
 {
-    /**
-     * @var string
-     */
-    private $color = 'white';
-
     public function __construct()
     {
+        $this->color = 'white';
+
         $this->block = [
             [
-                'offset' => -1,
+                'length' => 3,
+                'height' => 2,
                 'shapes' => [
                     '..',
                     ' ..'
                 ]
             ],
             [
-                'offset' => 0,
+                'length' => 2,
+                'height' => 3,
                 'shapes' => [
                     ' .',
                     '..',
@@ -36,13 +35,5 @@ class ZBlock extends AbstractBlock
                 ]
             ]
         ];
-    }
-
-    /**
-     * @param ScreenBuffer $buffer
-     */
-    public function draw(ScreenBuffer $buffer)
-    {
-
     }
 }
