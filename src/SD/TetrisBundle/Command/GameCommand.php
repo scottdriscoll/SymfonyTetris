@@ -23,6 +23,20 @@ class GameCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $a = new \SD\TetrisBundle\Event\GameOverEvent();
+        $b = clone $a;
+
+        $hash1 = spl_object_hash($a);
+        $hash2 = spl_object_hash($b);
+        var_dump($hash1, $hash2);
+
+        $s1 = serialize($a);
+        var_dump($s1);
+        $o1 = unserialize($s1);
+        $h1 = spl_object_hash($o1);
+        var_dump($h1);
+        exit;
+
         $outputHelper = new OutputHelper($output);
         $outputHelper->disableKeyboardOutput();
         $outputHelper->hideCursor();
