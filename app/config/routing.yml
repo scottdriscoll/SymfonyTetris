@@ -1,5 +1,1 @@
-sd_tetris:
-    resource: "@SDTetrisBundle/Controller/"
-    type:     annotation
-    prefix:   /
 
