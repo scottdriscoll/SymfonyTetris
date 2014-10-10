@@ -8,10 +8,11 @@ namespace SD\Game;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use JMS\DiExtraBundle\Annotation as DI;
 use SD\TetrisBundle\Events;
-use SD\TetrisBundle\Event\HeartbeatEvent;
 use SD\TetrisBundle\Event\RedrawEvent;
 use SD\TetrisBundle\Event\BlockReachedBottomEvent;
 use SD\TetrisBundle\Event\LinesClearedEvent;
+use SD\TetrisBundle\Event\BlockMovedEvent;
+use SD\TetrisBundle\Event\NextBlockReadyEvent;
 use SD\Game\Block\AbstractBlock;
 use SD\ConsoleHelper\ScreenBuffer;
 use SD\ConsoleHelper\OutputHelper;
@@ -98,51 +99,23 @@ class GameBoard
     }
 
     /**
-     * @DI\Observe(Events::HEARTBEAT, priority = 254)
+     * @DI\Observe(Events::BLOCK_MOVED, priority = 0)
      *
-     * @param HeartbeatEvent $event
-     *
-     * @throws \Exception
+     * @param BlockMovedEvent $event
      */
-    public function drawBoard(HeartbeatEvent $event)
+    public function screenDirty(BlockMovedEvent $event)
     {
-        if (null === $this->output) {
-            throw new \Exception('OutputHelper not initialized');
-        }
+        $this->drawBoard();
+    }
 
-        $this->output->clear();
-        $this->buffer->clearScreen();
-
-        $scaledWidth = $this->width * $this->horizontalScale;
-
-        // Draw board
-        for ($x = 0; $x < $scaledWidth + 2; $x++) {
-            $this->buffer->putNextValue($x, 0, '-');
-        }
-
-        for ($y = 1; $y < $this->height + 1; $y++) {
-            $this->buffer->putNextValue(0, $y, '|');
-            $this->buffer->putNextValue($scaledWidth + 1, $y, '|');
-        }
-
-        for ($x = 0; $x < $scaledWidth + 2; $x++) {
-            $this->buffer->putNextValue($x, $this->height + 1, '-');
-        }
-
-        for ($y = 1; $y <= $this->height; $y++) {
-            for ($x = 1; $x <= $this->width; $x++) {
-                $color = $this->board[$y][$x]->getColor();
-                for ($i = 0; $i < $this->horizontalScale; $i++) {
-                    $this->buffer->putNextValue($x * $this->horizontalScale + $i - 1, $y, ' ', null, $color);
-                }
-            }
-        }
-
-        $this->eventDispatcher->dispatch(Events::REDRAW, new RedrawEvent($this->buffer));
-
-        $this->buffer->paintChanges($this->output);
-        $this->buffer->nextFrame();
-        $this->output->dump();
+    /**
+     * @DI\Observe(Events::NEXT_BLOCK_READY, priority = 0)
+     *
+     * @param NextBlockReadyEvent $event
+     */
+    public function nextBlockReady(NextBlockReadyEvent $event)
+    {
+        $this->drawBoard();
     }
 
     /**
@@ -235,5 +208,42 @@ class GameBoard
 
         // Swap the board
         $this->board = $newBoard;
+    }
+
+    private function drawBoard()
+    {
+        $this->output->clear();
+        $this->buffer->clearScreen();
+
+        $scaledWidth = $this->width * $this->horizontalScale;
+
+        // Draw board
+        for ($x = 0; $x < $scaledWidth + 2; $x++) {
+            $this->buffer->putNextValue($x, 0, '-');
+        }
+
+        for ($y = 1; $y < $this->height + 1; $y++) {
+            $this->buffer->putNextValue(0, $y, '|');
+            $this->buffer->putNextValue($scaledWidth + 1, $y, '|');
+        }
+
+        for ($x = 0; $x < $scaledWidth + 2; $x++) {
+            $this->buffer->putNextValue($x, $this->height + 1, '-');
+        }
+
+        for ($y = 1; $y <= $this->height; $y++) {
+            for ($x = 1; $x <= $this->width; $x++) {
+                $color = $this->board[$y][$x]->getColor();
+                for ($i = 0; $i < $this->horizontalScale; $i++) {
+                    $this->buffer->putNextValue($x * $this->horizontalScale + $i - 1, $y, ' ', null, $color);
+                }
+            }
+        }
+
+        $this->eventDispatcher->dispatch(Events::REDRAW, new RedrawEvent($this->buffer));
+
+        $this->buffer->paintChanges($this->output);
+        $this->buffer->nextFrame();
+        $this->output->dump();
     }
 }

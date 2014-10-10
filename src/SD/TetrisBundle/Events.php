@@ -18,6 +18,8 @@ final class Events
     const KEYBOARD_ROTATE = 'sd.keyboard.rotate';
     const GAME_OVER = 'sd.game.over';
     const BLOCK_REACHED_BOTTOM = 'sd.block_bottom';
+    const BLOCK_MOVED = 'sd.block_moved';
+    const NEXT_BLOCK_READY = 'sd.next_block_ready';
     const LINES_CLEARED = 'sd.lines_cleared';
     const STAGE_CLEARED = 'sd.stage_cleared';
 }

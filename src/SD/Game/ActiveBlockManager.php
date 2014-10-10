@@ -11,7 +11,6 @@ use SD\TetrisBundle\Events;
 use SD\TetrisBundle\Event\HeartbeatEvent;
 use SD\TetrisBundle\Event\RedrawEvent;
 use SD\Game\Block\AbstractBlock;
-use SD\Game\NextBlockManager;
 use SD\TetrisBundle\Event\KeyboardDownEvent;
 use SD\TetrisBundle\Event\KeyboardLeftEvent;
 use SD\TetrisBundle\Event\KeyboardRightEvent;
@@ -19,7 +18,7 @@ use SD\TetrisBundle\Event\KeyboardRotateEvent;
 use SD\TetrisBundle\Event\BlockReachedBottomEvent;
 use SD\TetrisBundle\Event\GameOverEvent;
 use SD\TetrisBundle\Event\StageClearedEvent;
-use SD\Game\GameBoard;
+use SD\TetrisBundle\Event\BlockMovedEvent;
 
 /**
  * @DI\Service("game.active_block_manager")
@@ -99,7 +98,10 @@ class ActiveBlockManager
      */
     public function heartbeat(HeartbeatEvent $event)
     {
+        $blockMoved = false;
+
         if (null === $this->activeBlock) {
+            $blockMoved = true;
             $this->activeBlock = $this->nextBlockManager->getNextBlock();
             if ($this->activeBlock) {
                 $this->activeBlock->setXPosition($this->width / 2);
@@ -120,8 +122,13 @@ class ActiveBlockManager
                     $this->activeBlock = null;
                 } else {
                     $this->activeBlock->setYPosition($this->activeBlock->getYPosition() + 1);
+                    $blockMoved = true;
                 }
             }
+        }
+
+        if ($blockMoved) {
+            $this->eventDispatcher->dispatch(Events::BLOCK_MOVED, new BlockMovedEvent($this->activeBlock));
         }
     }
 
@@ -152,6 +159,7 @@ class ActiveBlockManager
 
         if ($this->gameBoard->doesBlockFit($block)) {
             $this->activeBlock = $block;
+            $this->eventDispatcher->dispatch(Events::BLOCK_MOVED, new BlockMovedEvent($this->activeBlock));
         }
     }
 
@@ -170,6 +178,7 @@ class ActiveBlockManager
 
         if ($this->gameBoard->doesBlockFit($block)) {
             $this->activeBlock = $block;
+            $this->eventDispatcher->dispatch(Events::BLOCK_MOVED, new BlockMovedEvent($this->activeBlock));
         }
     }
 
@@ -188,6 +197,7 @@ class ActiveBlockManager
 
         if ($this->gameBoard->doesBlockFit($block)) {
             $this->activeBlock = $block;
+            $this->eventDispatcher->dispatch(Events::BLOCK_MOVED, new BlockMovedEvent($this->activeBlock));
         }
     }
 
@@ -209,6 +219,7 @@ class ActiveBlockManager
             $this->activeBlock = null;
         } else {
             $this->activeBlock = $block;
+            $this->eventDispatcher->dispatch(Events::BLOCK_MOVED, new BlockMovedEvent($this->activeBlock));
         }
     }
 

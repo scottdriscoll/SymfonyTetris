@@ -5,10 +5,12 @@
 
 namespace SD\Game;
 
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use JMS\DiExtraBundle\Annotation as DI;
 use SD\TetrisBundle\Events;
 use SD\TetrisBundle\Event\HeartbeatEvent;
 use SD\TetrisBundle\Event\RedrawEvent;
+use SD\TetrisBundle\Event\NextBlockReadyEvent;
 use SD\Game\Block\BlockFactory;
 use SD\Game\Block\AbstractBlock;
 
@@ -19,6 +21,11 @@ use SD\Game\Block\AbstractBlock;
  */
 class NextBlockManager
 {
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
+
     /**
      * @var BlockFactory
      */
@@ -46,17 +53,20 @@ class NextBlockManager
 
     /**
      * @DI\InjectParams({
+     *     "eventDispatcher" = @DI\Inject("event_dispatcher"),
      *     "blockFactory" = @DI\Inject("game.block_factory"),
      *     "width" = @DI\Inject("%board_width%"),
      *     "horizontalScale" = @DI\Inject("%horizontal_scale%")
      * })
      *
+     * @param EventDispatcherInterface $eventDispatcher
      * @param BlockFactory $blockFactory
      * @param int $width
      * @param int $horizontalScale
      */
-    public function __construct(BlockFactory $blockFactory, $width, $horizontalScale)
+    public function __construct(EventDispatcherInterface $eventDispatcher, BlockFactory $blockFactory, $width, $horizontalScale)
     {
+        $this->eventDispatcher = $eventDispatcher;
         $this->blockFactory = $blockFactory;
         $this->width = $width;
         $this->horizontalScale = $horizontalScale;
@@ -73,6 +83,7 @@ class NextBlockManager
             $this->nextBlock = $this->blockFactory->getRandomBlock();
             $this->nextBlock->setXPosition($this->width + 3);
             $this->nextBlock->setYPosition(1);
+            $this->eventDispatcher->dispatch(Events::NEXT_BLOCK_READY, new NextBlockReadyEvent($this->nextBlock));
         }
     }
 
