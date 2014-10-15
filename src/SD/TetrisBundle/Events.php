@@ -23,4 +23,5 @@ final class Events
     const LINES_CLEARED = 'sd.lines_cleared';
     const STAGE_CLEARED = 'sd.stage_cleared';
     const MESSAGE_PLAYER_CONNECTED = 'sd.message.player_connected';
+    const MESSAGE_BOARD_UPDATE = 'sd.message.board_update';
 }

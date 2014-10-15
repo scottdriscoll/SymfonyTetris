@@ -3,7 +3,7 @@
  * Copyright (c) Scott Driscoll
  */
 
-namespace SD\GameSockets\Message;
+namespace SD\Game\Sockets\Message;
 
 use Symfony\Component\Stopwatch\Stopwatch;
 

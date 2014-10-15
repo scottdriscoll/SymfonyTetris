@@ -5,11 +5,14 @@
 
 namespace SD\TetrisBundle\Command;
 
+use SD\Game\Sockets\Udp2p;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use SD\ConsoleHelper\OutputHelper;
-use SD\Game\Engine as GameEngine;
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Question\ChoiceQuestion;
+use Symfony\Component\Console\Question\Question;
 
 /**
  * @author Scott Driscoll <scott.driscoll@opensoftdev.com>
@@ -23,25 +26,35 @@ class GameCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $a = new \SD\TetrisBundle\Event\GameOverEvent();
-        $b = clone $a;
+        /** @var QuestionHelper $helper */
+        $helper = $this->getHelper('question');
+        $name = null;
 
-        $hash1 = spl_object_hash($a);
-        $hash2 = spl_object_hash($b);
-        var_dump($hash1, $hash2);
+        $question = new ChoiceQuestion('Singleplayer or multiplayer?', array (1 => 'single (default)', 2 => 'multi'), 1);
+        if ('multi' ===  $helper->ask($input, $output, $question)) {
+            $question = new Question('Enter your name: ');
+            do {
+                $name = $helper->ask($input, $output, $question);
+            } while (empty($name));
 
-        $s1 = serialize($a);
-        var_dump($s1);
-        $o1 = unserialize($s1);
-        $h1 = spl_object_hash($o1);
-        var_dump($h1);
-        exit;
+            $question = new Question('Enter IP address to connect to: ');
+            $ipAddress = $helper->ask($input, $output, $question);
+
+            /** @var Udp2p $udp */
+            $udp = $this->getContainer()->get('game.udp2p');
+
+            if (!$udp->establishCommunication($ipAddress, $port = 11009, $timeout = 60000, $name)) {
+                $output->writeln("Could not connect to peer.");
+
+                return;
+            }
+        }
 
         $outputHelper = new OutputHelper($output);
         $outputHelper->disableKeyboardOutput();
         $outputHelper->hideCursor();
 
-        $this->getContainer()->get('game.game_board')->initialize($outputHelper);
+        $this->getContainer()->get('game.game_board')->initialize($outputHelper, $name);
 
         $this->getContainer()->get('game.engine')->run();
     }

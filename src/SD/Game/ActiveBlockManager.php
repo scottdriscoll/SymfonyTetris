@@ -234,4 +234,12 @@ class ActiveBlockManager
             $this->fallDelay -= 0.2;
         }
     }
+
+    /**
+     * @return AbstractBlock
+     */
+    public function getActiveBlock()
+    {
+        return $this->activeBlock;
+    }
 }

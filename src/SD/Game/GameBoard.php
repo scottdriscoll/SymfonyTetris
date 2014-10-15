@@ -60,6 +60,11 @@ class GameBoard
     private $board = [];
 
     /**
+     * @var string
+     */
+    private $name;
+
+    /**
      * @DI\InjectParams({
      *     "eventDispatcher" = @DI\Inject("event_dispatcher"),
      *     "buffer" = @DI\Inject("screen_buffer"),
@@ -85,11 +90,13 @@ class GameBoard
 
     /**
      * @param OutputHelper $output
+     * @param string $name
      */
-    public function initialize(OutputHelper $output)
+    public function initialize(OutputHelper $output, $name = null)
     {
         $this->output = $output;
-        $this->buffer->initialize($this->width * $this->horizontalScale + 20, $this->height + 5);
+        $this->buffer->initialize(2 * $this->width * $this->horizontalScale + 30, $this->height + 5);
+        $this->name = $name;
 
         for ($h = 1; $h <= $this->height; $h++) {
             for ($w = 1; $w <= $this->width; $w++) {
@@ -156,6 +163,14 @@ class GameBoard
         }
 
         return true;
+    }
+
+    /**
+     * @return array
+     */
+    public function getBoard()
+    {
+        return $this->board;
     }
 
     private function testForCompletedLines()
@@ -238,6 +253,10 @@ class GameBoard
                     $this->buffer->putNextValue($x * $this->horizontalScale + $i - 1, $y, ' ', null, $color);
                 }
             }
+        }
+
+        if (null !== $this->name) {
+            $this->buffer->putArrayOfValues(0, $this->height + 2, [$this->name]);
         }
 
         $this->eventDispatcher->dispatch(Events::REDRAW, new RedrawEvent($this->buffer));

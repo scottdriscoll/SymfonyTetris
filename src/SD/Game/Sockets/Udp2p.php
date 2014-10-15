@@ -3,12 +3,14 @@
  * Copyright (c) Scott Driscoll
  */
 
-namespace SD\GameSockets;
+namespace SD\Game\Sockets;
 
-use SD\GameSockets\Message\AbstractMessage;
-use SD\GameSockets\Message\AcknowledgeMessage;
-use SD\GameSockets\Message\ConnectionMessage;
-use SD\GameSockets\Message\CriticalMessage;
+use SD\Game\Sockets\Message\AbstractMessage;
+use SD\Game\Sockets\Message\AcknowledgeMessage;
+use SD\Game\Sockets\Message\ConnectionMessage;
+use SD\Game\Sockets\Message\CriticalMessage;
+use SD\Game\Sockets\Message\BoardUpdateMessage;
+use SD\TetrisBundle\Event\MultiplayerBoardUpdateEvent;
 use SD\TetrisBundle\Events;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -25,6 +27,8 @@ use SD\TetrisBundle\Event\PlayerConnectedEvent;
  */
 class Udp2p
 {
+    const PORT = 11019;
+
     const MICROSECONDS_PER_SECOND = 1000000;
 
     /**
@@ -69,11 +73,6 @@ class Udp2p
     private $ip;
 
     /**
-     * @var int
-     */
-    private $port;
-
-    /**
      * @DI\InjectParams({
      *     "eventDispatcher" = @DI\Inject("event_dispatcher")
      * })
@@ -89,26 +88,24 @@ class Udp2p
      * Employ UDP hole punching to communicate with the other peer
      *
      * @param string $ip
-     * @param int $port
      * @param int $timeout timeout in milliseconds
      * @param string $name
      *
      * @return bool
      */
-    public function establishCommunication($ip, $port, $timeout, $name)
+    public function establishCommunication($ip, $timeout, $name)
     {
         $this->ip = $ip;
-        $this->port = $port;
         $stopwatch = new Stopwatch();
         $receiveMessage = null;
         $message = new ConnectionMessage($name);
 
         $this->socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-        socket_bind($this->socket, '0.0.0.0');
+        socket_bind($this->socket, '0.0.0.0', self::PORT);
 
         $stopwatch->start('connect');
 
-        while (null === $this->socket) {
+        while (null === $receiveMessage) {
             $this->sendMessage($message);
             $receiveMessage = $this->readMessage();
             if (null === $receiveMessage || !($receiveMessage instanceof ConnectionMessage)) {
@@ -205,8 +202,17 @@ class Udp2p
             $this->storeCriticalMessage($message, $messageId);
         }
 
-        $messageLength = pack("L", strlen($message));
-        fwrite($this->socket, $messageLength . $serializedMessage);
+        $messageLength = pack("L", strlen($serializedMessage));
+        socket_sendto($this->socket, $messageLength, 4, 0, $this->ip, self::PORT);
+        socket_sendto($this->socket, $serializedMessage, strlen($serializedMessage), 0, $this->ip, self::PORT);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isConnected()
+    {
+        return !empty($this->socket);
     }
 
     /**
@@ -237,8 +243,12 @@ class Udp2p
     {
         $messageLength = 0;
         $serializedMessage = '';
-        if (socket_recvfrom($this->socket, $messageLength, 4, 0, $this->ip, $this->port) == 4) {
-            if (socket_recvfrom($this->socket, $serializedMessage, $messageLength, 0, $this->ip, $this->port) == $messageLength) {
+        $port = self::PORT;
+        if (@socket_recvfrom($this->socket, $messageLength, 4, MSG_DONTWAIT, $this->ip, $port) == 4) {
+            $messageLength = unpack('L', $messageLength);
+            $messageLength = $messageLength[1];
+
+            if (@socket_recvfrom($this->socket, $serializedMessage, $messageLength, MSG_DONTWAIT, $this->ip, $port) == $messageLength) {
                 $message = unserialize($serializedMessage);
 
                 if (!empty($message) && is_object($message) && $message instanceof AbstractMessage) {
@@ -265,6 +275,8 @@ class Udp2p
     {
         if ($message instanceof ConnectionMessage) {
             $this->eventDispatcher->dispatch(Events::MESSAGE_PLAYER_CONNECTED, new PlayerConnectedEvent($message->getName()));
+        } elseif ($message instanceof BoardUpdateMessage) {
+            $this->eventDispatcher->dispatch(Events::MESSAGE_BOARD_UPDATE, new MultiplayerBoardUpdateEvent($message));
         }
     }
 }
