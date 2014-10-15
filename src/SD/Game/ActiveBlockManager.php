@@ -127,7 +127,7 @@ class ActiveBlockManager
             }
         }
 
-        if ($blockMoved) {
+        if ($blockMoved && $this->activeBlock) {
             $this->eventDispatcher->dispatch(Events::BLOCK_MOVED, new BlockMovedEvent($this->activeBlock));
         }
     }
