@@ -3,6 +3,8 @@ Symfony Multiplayer Tetris
 
 Tetris in a Symfony Console Application
 
+![Tetris Image](resources/tetris.png)
+
 ### Installation
 
 Clone project, run `composer install`.
