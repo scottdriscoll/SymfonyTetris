@@ -13,6 +13,7 @@ use SD\TetrisBundle\Event\BlockReachedBottomEvent;
 use SD\TetrisBundle\Event\LinesClearedEvent;
 use SD\TetrisBundle\Event\BlockMovedEvent;
 use SD\TetrisBundle\Event\NextBlockReadyEvent;
+use SD\TetrisBundle\Event\MultiplayerBoardUpdateEvent;
 use SD\Game\Block\AbstractBlock;
 use SD\ConsoleHelper\ScreenBuffer;
 use SD\ConsoleHelper\OutputHelper;
@@ -60,6 +61,18 @@ class GameBoard
     private $board = [];
 
     /**
+     * Multiplayer's board
+     *
+     * @var array
+     */
+    private $peerBoard = [];
+
+    /**
+     * @var AbstractBlock
+     */
+    private $peerBlock;
+
+    /**
      * @var string
      */
     private $name;
@@ -94,8 +107,9 @@ class GameBoard
      */
     public function initialize(OutputHelper $output, $name = null)
     {
+        $multiplier = null === $name ? 1 : 2;
         $this->output = $output;
-        $this->buffer->initialize(2 * $this->width * $this->horizontalScale + 30, $this->height + 5);
+        $this->buffer->initialize($multiplier * $this->width * $this->horizontalScale + 30, $this->height + 5);
         $this->name = $name;
 
         for ($h = 1; $h <= $this->height; $h++) {
@@ -173,6 +187,19 @@ class GameBoard
         return $this->board;
     }
 
+    /**
+     * @DI\Observe(Events::MESSAGE_BOARD_UPDATE, priority = 0)
+     *
+     * @param MultiplayerBoardUpdateEvent $event
+     */
+    public function peerBoardUpdate(MultiplayerBoardUpdateEvent $event)
+    {
+        $this->peerBoard = $event->getMessage()->getBoard();
+        $this->peerBlock = $event->getMessage()->getActiveBlock();
+        $x = $this->peerBlock->getXPosition() + 20;
+        $this->peerBlock->setXPosition($x);
+    }
+
     private function testForCompletedLines()
     {
         $linesCleared = [];
@@ -230,33 +257,15 @@ class GameBoard
         $this->output->clear();
         $this->buffer->clearScreen();
 
-        $scaledWidth = $this->width * $this->horizontalScale;
-
-        // Draw board
-        for ($x = 0; $x < $scaledWidth + 2; $x++) {
-            $this->buffer->putNextValue($x, 0, '-');
-        }
-
-        for ($y = 1; $y < $this->height + 1; $y++) {
-            $this->buffer->putNextValue(0, $y, '|');
-            $this->buffer->putNextValue($scaledWidth + 1, $y, '|');
-        }
-
-        for ($x = 0; $x < $scaledWidth + 2; $x++) {
-            $this->buffer->putNextValue($x, $this->height + 1, '-');
-        }
-
-        for ($y = 1; $y <= $this->height; $y++) {
-            for ($x = 1; $x <= $this->width; $x++) {
-                $color = $this->board[$y][$x]->getColor();
-                for ($i = 0; $i < $this->horizontalScale; $i++) {
-                    $this->buffer->putNextValue($x * $this->horizontalScale + $i - 1, $y, ' ', null, $color);
-                }
-            }
-        }
 
         if (null !== $this->name) {
             $this->buffer->putArrayOfValues(0, $this->height + 2, [$this->name]);
+        }
+
+        $this->drawBoardArray($this->board, 0);
+        if (!empty($this->peerBoard)) {
+            $this->drawBoardArray($this->peerBoard, $this->width * $this->horizontalScale + 20);
+            $this->peerBlock->draw($this->buffer, $this->horizontalScale);
         }
 
         $this->eventDispatcher->dispatch(Events::REDRAW, new RedrawEvent($this->buffer));
@@ -264,5 +273,37 @@ class GameBoard
         $this->buffer->paintChanges($this->output);
         $this->buffer->nextFrame();
         $this->output->dump();
+    }
+
+    /**
+     * @param array $board
+     * @param int $xOffset
+     */
+    private function drawBoardArray(array $board, $xOffset)
+    {
+        $scaledWidth = $this->width * $this->horizontalScale;
+
+        // Draw board
+        for ($x = $xOffset; $x < $scaledWidth + $xOffset + 2; $x++) {
+            $this->buffer->putNextValue($x, 0, '-');
+        }
+
+        for ($y = 1; $y < $this->height + 1; $y++) {
+            $this->buffer->putNextValue($xOffset, $y, '|');
+            $this->buffer->putNextValue($xOffset + $scaledWidth + 1, $y, '|');
+        }
+
+        for ($x = $xOffset; $x < $scaledWidth + $xOffset + 2; $x++) {
+            $this->buffer->putNextValue($x, $this->height + 1, '-');
+        }
+
+        for ($y = 1; $y <= $this->height; $y++) {
+            for ($x = 1; $x <= $this->width; $x++) {
+                $color = $board[$y][$x]->getColor();
+                for ($i = 0; $i < $this->horizontalScale; $i++) {
+                    $this->buffer->putNextValue($x * $this->horizontalScale + $xOffset + $i - 1, $y, ' ', null, $color);
+                }
+            }
+        }
     }
 }

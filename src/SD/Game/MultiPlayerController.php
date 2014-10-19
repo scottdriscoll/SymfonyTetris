@@ -53,31 +53,6 @@ class MultiPlayerController
     private $gameBoard;
 
     /**
-     * @var BoardUpdateMessage
-     */
-    private $peerBoardMessage;
-
-    /**
-     * @var bool
-     */
-    private $peerBoardDirty = false;
-
-    /**
-     * @var int
-     */
-    private $width;
-
-    /**
-     * @var int
-     */
-    private $height;
-
-    /**
-     * @var int
-     */
-    private $horizontalScale;
-
-    /**
      * @var Stopwatch
      */
     private $stopwatch;
@@ -87,29 +62,20 @@ class MultiPlayerController
      *     "eventDispatcher"    = @DI\Inject("event_dispatcher"),
      *     "udp2p"              = @DI\Inject("game.udp2p"),
      *     "activeBlockManager" = @DI\Inject("game.active_block_manager"),
-     *     "gameBoard"          = @DI\Inject("game.game_board"),
-     *     "width"              = @DI\Inject("%board_width%"),
-     *     "height"             = @DI\Inject("%board_height%"),
-     *     "horizontalScale"    = @DI\Inject("%horizontal_scale%")
+     *     "gameBoard"          = @DI\Inject("game.game_board")
      * })
      *
      * @param EventDispatcherInterface $eventDispatcher
      * @param Udp2p $udp2p
      * @param ActiveBlockManager $activeBlockManager
      * @param GameBoard $gameBoard
-     * @param int $width
-     * @param int $height
-     * @param int $horizontalScale
      */
-    public function __construct(EventDispatcherInterface $eventDispatcher, Udp2p $udp2p, ActiveBlockManager $activeBlockManager, GameBoard $gameBoard, $width, $height, $horizontalScale)
+    public function __construct(EventDispatcherInterface $eventDispatcher, Udp2p $udp2p, ActiveBlockManager $activeBlockManager, GameBoard $gameBoard)
     {
         $this->eventDispatcher = $eventDispatcher;
         $this->udp2p = $udp2p;
         $this->activeBlockManager = $activeBlockManager;
         $this->gameBoard = $gameBoard;
-        $this->width = $width;
-        $this->height = $height;
-        $this->horizontalScale = $horizontalScale;
         $this->stopwatch = new Stopwatch();
         $this->stopwatch->start('mp');
     }
@@ -130,7 +96,6 @@ class MultiPlayerController
         if ($this->stopwatch->getEvent('mp')->getDuration() >= self::BOARD_UPDATE_FREQUENCY) {
             $this->stopwatch = new Stopwatch();
             $this->stopwatch->start('mp');
-            echo "sending" . rand();
 
             $board = $this->gameBoard->getBoard();
             if (empty($board)) {
@@ -144,59 +109,5 @@ class MultiPlayerController
 
             $this->udp2p->sendMessage(new BoardUpdateMessage($board, $block));
         }
-
-    }
-
-    /**
-     * @DI\Observe(Events::REDRAW, priority = 0)
-     *
-     * @param RedrawEvent $event
-     */
-    public function drawPeerBoard(RedrawEvent $event)
-    {
-        if (!$this->peerBoardDirty || !$this->udp2p->isConnected()) {
-            return;
-        }
-
-        $this->peerBoardDirty = false;
-        $buffer = $event->getOutput();
-        $board = $this->peerBoardMessage->getBoard();
-
-        $xStart = $this->width * $this->horizontalScale + 20;
-        $scaledWidth = $this->width * $this->horizontalScale;
-
-        // Draw board
-        for ($x = $xStart; $x < $xStart + $scaledWidth + 2; $x++) {
-            $buffer->putNextValue($x, 0, '-');
-        }
-
-        for ($y = 1; $y < $this->height + 1; $y++) {
-            $buffer->putNextValue($xStart, $y, '|');
-            $buffer->putNextValue($xStart + $scaledWidth + 1, $y, '|');
-        }
-
-        for ($x = $xStart; $x < $xStart + $scaledWidth + 2; $x++) {
-            $buffer->putNextValue($x, $this->height + 1, '-');
-        }
-
-        for ($y = 1; $y <= $this->height; $y++) {
-            for ($x = 1; $x <= $this->width; $x++) {
-                $color = $board[$y][$x]->getColor();
-                for ($i = 0; $i < $this->horizontalScale; $i++) {
-                    $buffer->putNextValue($x * $this->horizontalScale + $xStart + $i - 1, $y, ' ', null, $color);
-                }
-            }
-        }
-    }
-
-    /**
-     * @DI\Observe(Events::MESSAGE_BOARD_UPDATE, priority = 0)
-     *
-     * @param MultiplayerBoardUpdateEvent $event
-     */
-    public function peerBoardUpdate(MultiplayerBoardUpdateEvent $event)
-    {
-        $this->peerBoardMessage = $event->getMessage();
-        $this->peerBoardDirty = true;
     }
 }
