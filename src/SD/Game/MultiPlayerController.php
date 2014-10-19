@@ -121,8 +121,10 @@ class MultiPlayerController
      */
     public function gameOver(GameOverEvent $event)
     {
-        $message = new GameOverMessage();
-        $message->setCritical(true);
-        $this->udp2p->sendMessage($message);
+        if (!$event->getPlayerWins()) {
+            $message = new GameOverMessage();
+            $message->setCritical(true);
+            $this->udp2p->sendMessage($message);
+        }
     }
 }
