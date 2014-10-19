@@ -247,6 +247,8 @@ class GameBoard
                 }
             }
         }
+
+        $this->board = $newBoard;
     }
 
     private function testForCompletedLines()
