@@ -5,6 +5,7 @@
 
 namespace SD\Game;
 
+use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use JMS\DiExtraBundle\Annotation as DI;
 use SD\Game\Sockets\Udp2p;
@@ -52,11 +53,6 @@ class MultiPlayerController
     private $gameBoard;
 
     /**
-     * @var int
-     */
-    private $lastUpdate = 0;
-
-    /**
      * @var BoardUpdateMessage
      */
     private $peerBoardMessage;
@@ -80,6 +76,11 @@ class MultiPlayerController
      * @var int
      */
     private $horizontalScale;
+
+    /**
+     * @var Stopwatch
+     */
+    private $stopwatch;
 
     /**
      * @DI\InjectParams({
@@ -109,6 +110,8 @@ class MultiPlayerController
         $this->width = $width;
         $this->height = $height;
         $this->horizontalScale = $horizontalScale;
+        $this->stopwatch = new Stopwatch();
+        $this->stopwatch->start('mp');
     }
 
     /**
@@ -121,22 +124,21 @@ class MultiPlayerController
     public function sendBoardUpdate(HeartbeatEvent $event)
     {
         if (!$this->udp2p->isConnected()) {
-            die("not connected");
             return;
         }
 
-        if (1||$event->getTimestamp() >= self::BOARD_UPDATE_FREQUENCY + $this->lastUpdate) {
-            $this->lastUpdate = $event->getTimestamp();
+        if ($this->stopwatch->getEvent('mp')->getDuration() >= self::BOARD_UPDATE_FREQUENCY) {
+            $this->stopwatch = new Stopwatch();
+            $this->stopwatch->start('mp');
+            echo "sending" . rand();
 
             $board = $this->gameBoard->getBoard();
             if (empty($board)) {
-                die("no board");
                 return;
             }
 
             $block = $this->activeBlockManager->getActiveBlock();
             if (empty($block)) {
-                echo "empty block" . rand();
                 return;
             }
 
@@ -160,28 +162,28 @@ class MultiPlayerController
         $buffer = $event->getOutput();
         $board = $this->peerBoardMessage->getBoard();
 
-        $xStart = $this->width * $this->horizontalScale + 10;
+        $xStart = $this->width * $this->horizontalScale + 20;
         $scaledWidth = $this->width * $this->horizontalScale;
 
         // Draw board
-        for ($x = $xStart; $x < $scaledWidth + 2; $x++) {
+        for ($x = $xStart; $x < $xStart + $scaledWidth + 2; $x++) {
             $buffer->putNextValue($x, 0, '-');
         }
 
         for ($y = 1; $y < $this->height + 1; $y++) {
-            $buffer->putNextValue(0, $y, '|');
-            $buffer->putNextValue($scaledWidth + 1, $y, '|');
+            $buffer->putNextValue($xStart, $y, '|');
+            $buffer->putNextValue($xStart + $scaledWidth + 1, $y, '|');
         }
 
-        for ($x = $xStart; $x < $scaledWidth + 2; $x++) {
+        for ($x = $xStart; $x < $xStart + $scaledWidth + 2; $x++) {
             $buffer->putNextValue($x, $this->height + 1, '-');
         }
 
         for ($y = 1; $y <= $this->height; $y++) {
-            for ($x = $xStart + 1; $x <= $this->width; $x++) {
+            for ($x = 1; $x <= $this->width; $x++) {
                 $color = $board[$y][$x]->getColor();
                 for ($i = 0; $i < $this->horizontalScale; $i++) {
-                    $buffer->putNextValue($x * $this->horizontalScale + $i - 1, $y, ' ', null, $color);
+                    $buffer->putNextValue($x * $this->horizontalScale + $xStart + $i - 1, $y, ' ', null, $color);
                 }
             }
         }
