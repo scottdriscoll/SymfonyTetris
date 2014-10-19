@@ -17,6 +17,7 @@ final class Events
     const KEYBOARD_DOWN = 'sd.keyboard.down';
     const KEYBOARD_ROTATE = 'sd.keyboard.rotate';
     const GAME_OVER = 'sd.game.over';
+    const USER_CLOSED = 'sd.user_closed';
     const BLOCK_REACHED_BOTTOM = 'sd.block_bottom';
     const BLOCK_MOVED = 'sd.block_moved';
     const NEXT_BLOCK_READY = 'sd.next_block_ready';

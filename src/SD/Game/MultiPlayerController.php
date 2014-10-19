@@ -19,6 +19,7 @@ use SD\Game\GameBoard;
 use SD\Game\Sockets\Message\GameOverMessage;
 use SD\TetrisBundle\Event\PeerLoseEvent;
 use SD\TetrisBundle\Event\LinesClearedEvent;
+use SD\TetrisBundle\Event\UserClosedEvent;
 
 /**
  * @DI\Service("game.multiplayer_controller")
@@ -134,9 +135,7 @@ class MultiPlayerController
         }
 
         if ($event->getSource() == GameOverEvent::SOURCE_SELF) {
-            $message = new GameOverMessage();
-            $message->setCritical(true);
-            $this->udp2p->sendMessage($message);
+            $this->udp2p->sendMessage(new GameOverMessage());
         }
     }
 
@@ -167,6 +166,20 @@ class MultiPlayerController
         $message->setCritical(true);
 
         $this->udp2p->sendMessage($message);
+    }
+
+    /**
+     * @DI\Observe(Events::USER_CLOSED, priority = 0)
+     *
+     * @param UserClosedEvent $event
+     */
+    public function userClosed(UserClosedEvent $event)
+    {
+        if (!$this->udp2p->isConnected()) {
+            return;
+        }
+
+        $this->udp2p->sendMessage(new GameOverMessage());
     }
 
     /**

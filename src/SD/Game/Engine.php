@@ -9,6 +9,8 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use JMS\DiExtraBundle\Annotation as DI;
 use SD\TetrisBundle\Events;
 use SD\TetrisBundle\Event\HeartbeatEvent;
+use SD\TetrisBundle\Event\GameOverEvent;
+use SD\TetrisBundle\Event\UserClosedEvent;
 
 /**
  * @DI\Service("game.engine")
@@ -47,8 +49,8 @@ class Engine
     public function run()
     {
         declare(ticks = 1);
-        pcntl_signal(SIGINT, [$this, 'gameOver']);
-        pcntl_signal(SIGTERM, [$this, 'gameOver']);
+        pcntl_signal(SIGINT, [$this, 'userClosed']);
+        pcntl_signal(SIGTERM, [$this, 'userClosed']);
 
         while (!$this->gameOver) {
             $timeStart = microtime(true);
@@ -63,10 +65,18 @@ class Engine
         }
     }
 
+    public function userClosed()
+    {
+        $this->eventDispatcher->dispatch(Events::USER_CLOSED, new UserClosedEvent());
+        $this->gameOver = true;
+    }
+
     /**
      * @DI\Observe(Events::GAME_OVER, priority = 0)
+     *
+     * @param GameOverEvent $event
      */
-    public function gameOver()
+    public function gameOver(GameOverEvent $event)
     {
         $this->gameOver = true;
     }
