@@ -16,6 +16,7 @@ use SD\TetrisBundle\Event\HeartbeatEvent;
 use SD\TetrisBundle\Event\GameOverEvent;
 use SD\Game\GameBoard;
 use SD\Game\Sockets\Message\GameOverMessage;
+use SD\TetrisBundle\Event\PeerLoseEvent;
 
 /**
  * @DI\Service("game.multiplayer_controller")
@@ -58,6 +59,11 @@ class MultiPlayerController
      * @var Stopwatch
      */
     private $stopwatch;
+
+    /**
+     * @var bool
+     */
+    private $playerWins = false;
 
     /**
      * @DI\InjectParams({
@@ -130,5 +136,23 @@ class MultiPlayerController
             $message->setCritical(true);
             $this->udp2p->sendMessage($message);
         }
+    }
+
+    /**
+     * @DI\Observe(Events::MESSAGE_PEER_LOSE, priority = 0)
+     *
+     * @param PeerLoseEvent $event
+     */
+    public function peerLose(PeerLoseEvent $event)
+    {
+        $this->playerWins = true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function didPlayerWin()
+    {
+        return $this->playerWins;
     }
 }

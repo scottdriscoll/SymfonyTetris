@@ -13,8 +13,6 @@ use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\Question;
 use SD\Game\Sockets\Udp2p;
-use SD\TetrisBundle\Events;
-use SD\TetrisBundle\Event\PeerLoseEvent;
 use SD\ConsoleHelper\OutputHelper;
 
 /**
@@ -73,20 +71,10 @@ class GameCommand extends ContainerAwareCommand
 
         $this->getContainer()->get('game.engine')->run();
 
-        if ($this->userWin) {
+        if ($this->getContainer()->get('game.multiplayer_controller')->didPlayerWin()) {
             $output->writeln("\n\n<fg=green>*** You win!! ***\n\n</fg=green>");
         } else {
             $output->writeln("\n\n<fg=red>*** You lose. ***\n\n</fg=red>");
         }
-    }
-
-    /**
-     * @DI\Observe(Events::MESSAGE_PEER_LOSE, priority = 0)
-     *
-     * @param PeerLoseEvent $event
-     */
-    public function peerLose(PeerLoseEvent $event)
-    {
-        $this->userWin = true;
     }
 }
