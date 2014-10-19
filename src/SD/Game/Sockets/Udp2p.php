@@ -5,17 +5,19 @@
 
 namespace SD\Game\Sockets;
 
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use JMS\DiExtraBundle\Annotation as DI;
+use Symfony\Component\Stopwatch\Stopwatch;
 use SD\Game\Sockets\Message\AbstractMessage;
 use SD\Game\Sockets\Message\AcknowledgeMessage;
 use SD\Game\Sockets\Message\ConnectionMessage;
 use SD\Game\Sockets\Message\CriticalMessage;
+use SD\Game\Sockets\Message\GameOverMessage;
 use SD\Game\Sockets\Message\BoardUpdateMessage;
 use SD\TetrisBundle\Event\MultiplayerBoardUpdateEvent;
 use SD\TetrisBundle\Events;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use JMS\DiExtraBundle\Annotation as DI;
-use Symfony\Component\Stopwatch\Stopwatch;
 use SD\TetrisBundle\Event\HeartbeatEvent;
+use SD\TetrisBundle\Event\GameOverEvent;
 use SD\TetrisBundle\Event\PlayerConnectedEvent;
 
 /**
@@ -73,6 +75,11 @@ class Udp2p
     private $ip;
 
     /**
+     * @var string
+     */
+    private $name;
+
+    /**
      * @DI\InjectParams({
      *     "eventDispatcher" = @DI\Inject("event_dispatcher")
      * })
@@ -95,6 +102,7 @@ class Udp2p
      */
     public function establishCommunication($ip, $timeout, $name)
     {
+        $this->name = $name;
         $this->ip = $ip;
         $stopwatch = new Stopwatch();
         $receiveMessage = null;
@@ -273,10 +281,12 @@ class Udp2p
      */
     private function fireEvent(AbstractMessage $message)
     {
-        if ($message instanceof ConnectionMessage) {
-            $this->eventDispatcher->dispatch(Events::MESSAGE_PLAYER_CONNECTED, new PlayerConnectedEvent($message->getName()));
-        } elseif ($message instanceof BoardUpdateMessage) {
+        if ($message instanceof BoardUpdateMessage) {
             $this->eventDispatcher->dispatch(Events::MESSAGE_BOARD_UPDATE, new MultiplayerBoardUpdateEvent($message));
+        } elseif ($message instanceof GameOverMessage) {
+            $this->eventDispatcher->dispatch(Events::GAME_OVER, new GameOverEvent(true));
+        } elseif ($message instanceof ConnectionMessage) {
+            $this->eventDispatcher->dispatch(Events::MESSAGE_PLAYER_CONNECTED, new PlayerConnectedEvent($this->name, $message->getName()));
         }
     }
 }

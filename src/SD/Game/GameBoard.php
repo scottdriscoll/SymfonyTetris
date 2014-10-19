@@ -13,6 +13,7 @@ use SD\TetrisBundle\Event\BlockReachedBottomEvent;
 use SD\TetrisBundle\Event\LinesClearedEvent;
 use SD\TetrisBundle\Event\BlockMovedEvent;
 use SD\TetrisBundle\Event\NextBlockReadyEvent;
+use SD\TetrisBundle\Event\PlayerConnectedEvent;
 use SD\TetrisBundle\Event\MultiplayerBoardUpdateEvent;
 use SD\Game\Block\AbstractBlock;
 use SD\ConsoleHelper\ScreenBuffer;
@@ -25,6 +26,7 @@ use SD\ConsoleHelper\OutputHelper;
  */
 class GameBoard
 {
+    const PEER_BOARD_OFFSET = 20;
     /**
      * @var int
      */
@@ -76,6 +78,11 @@ class GameBoard
      * @var string
      */
     private $name;
+
+    /**
+     * @var string
+     */
+    private $peerName;
 
     /**
      * @DI\InjectParams({
@@ -196,8 +203,18 @@ class GameBoard
     {
         $this->peerBoard = $event->getMessage()->getBoard();
         $this->peerBlock = $event->getMessage()->getActiveBlock();
-        $x = $this->peerBlock->getXPosition() + 20;
+        $x = $this->peerBlock->getXPosition() + self::PEER_BOARD_OFFSET;
         $this->peerBlock->setXPosition($x);
+    }
+
+    /**
+     * @DI\Observe(Events::MESSAGE_PLAYER_CONNECTED, priority = 0)
+     *
+     * @param PlayerConnectedEvent $event
+     */
+    public function peerConnected(PlayerConnectedEvent $event)
+    {
+        $this->peerName = $event->getPeerName();
     }
 
     private function testForCompletedLines()
@@ -259,12 +276,13 @@ class GameBoard
 
 
         if (null !== $this->name) {
-            $this->buffer->putArrayOfValues(0, $this->height + 2, [$this->name]);
+            $this->buffer->putArrayOfValues(0, $this->height + 2, [$this->name], 'green');
+            $this->buffer->putArrayOfValues($this->width * $this->horizontalScale + self::PEER_BOARD_OFFSET, $this->height + 2, [$this->peerName], 'red');
         }
 
         $this->drawBoardArray($this->board, 0);
         if (!empty($this->peerBoard)) {
-            $this->drawBoardArray($this->peerBoard, $this->width * $this->horizontalScale + 20);
+            $this->drawBoardArray($this->peerBoard, $this->width * $this->horizontalScale + self::PEER_BOARD_OFFSET);
             $this->peerBlock->draw($this->buffer, $this->horizontalScale);
         }
 

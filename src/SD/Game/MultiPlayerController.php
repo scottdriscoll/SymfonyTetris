@@ -9,16 +9,13 @@ use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use JMS\DiExtraBundle\Annotation as DI;
 use SD\Game\Sockets\Udp2p;
+use SD\Game\ScoreManager;
 use SD\Game\Sockets\Message\BoardUpdateMessage;
-use SD\TetrisBundle\Event\MultiplayerBoardUpdateEvent;
-use SD\Game\GameBoard;
-use SD\Game\ActiveBlockManager;
 use SD\TetrisBundle\Events;
 use SD\TetrisBundle\Event\HeartbeatEvent;
-use SD\TetrisBundle\Event\RedrawEvent;
-use SD\TetrisBundle\Event\NextBlockReadyEvent;
-use SD\Game\Block\BlockFactory;
-use SD\Game\Block\AbstractBlock;
+use SD\TetrisBundle\Event\GameOverEvent;
+use SD\Game\GameBoard;
+use SD\Game\Sockets\Message\GameOverMessage;
 
 /**
  * @DI\Service("game.multiplayer_controller")
@@ -48,6 +45,11 @@ class MultiPlayerController
     private $activeBlockManager;
 
     /**
+     * @var ScoreManager
+     */
+    private $scoreManager;
+
+    /**
      * @var GameBoard
      */
     private $gameBoard;
@@ -62,22 +64,23 @@ class MultiPlayerController
      *     "eventDispatcher"    = @DI\Inject("event_dispatcher"),
      *     "udp2p"              = @DI\Inject("game.udp2p"),
      *     "activeBlockManager" = @DI\Inject("game.active_block_manager"),
+     *     "scoreManager"       = @DI\Inject("game.score_manager"),
      *     "gameBoard"          = @DI\Inject("game.game_board")
      * })
      *
      * @param EventDispatcherInterface $eventDispatcher
      * @param Udp2p $udp2p
      * @param ActiveBlockManager $activeBlockManager
+     * @param ScoreManager $scoreManager
      * @param GameBoard $gameBoard
      */
-    public function __construct(EventDispatcherInterface $eventDispatcher, Udp2p $udp2p, ActiveBlockManager $activeBlockManager, GameBoard $gameBoard)
+    public function __construct(EventDispatcherInterface $eventDispatcher, Udp2p $udp2p, ActiveBlockManager $activeBlockManager, ScoreManager $scoreManager, GameBoard $gameBoard)
     {
         $this->eventDispatcher = $eventDispatcher;
         $this->udp2p = $udp2p;
         $this->activeBlockManager = $activeBlockManager;
+        $this->scoreManager = $scoreManager;
         $this->gameBoard = $gameBoard;
-        $this->stopwatch = new Stopwatch();
-        $this->stopwatch->start('mp');
     }
 
     /**
@@ -93,10 +96,7 @@ class MultiPlayerController
             return;
         }
 
-        if ($this->stopwatch->getEvent('mp')->getDuration() >= self::BOARD_UPDATE_FREQUENCY) {
-            $this->stopwatch = new Stopwatch();
-            $this->stopwatch->start('mp');
-
+        if (null === $this->stopwatch || $this->stopwatch->getEvent('mp')->getDuration() >= self::BOARD_UPDATE_FREQUENCY) {
             $board = $this->gameBoard->getBoard();
             if (empty($board)) {
                 return;
@@ -107,7 +107,22 @@ class MultiPlayerController
                 return;
             }
 
-            $this->udp2p->sendMessage(new BoardUpdateMessage($board, $block));
+            $this->stopwatch = new Stopwatch();
+            $this->stopwatch->start('mp');
+
+            $this->udp2p->sendMessage(new BoardUpdateMessage($board, $block, $this->scoreManager->getPlayerScore(), $this->scoreManager->getPlayerStage()));
         }
+    }
+
+    /**
+     * @DI\Observe(Events::GAME_OVER, priority = 255)
+     *
+     * @param GameOverEvent $event
+     */
+    public function gameOver(GameOverEvent $event)
+    {
+        $message = new GameOverMessage();
+        $message->setCritical(true);
+        $this->udp2p->sendMessage($message);
     }
 }

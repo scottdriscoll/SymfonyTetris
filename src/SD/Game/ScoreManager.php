@@ -11,9 +11,11 @@ use SD\TetrisBundle\Events;
 use SD\TetrisBundle\Event\RedrawEvent;
 use SD\TetrisBundle\Event\LinesClearedEvent;
 use SD\TetrisBundle\Event\StageClearedEvent;
+use SD\TetrisBundle\Event\PlayerConnectedEvent;
+use SD\TetrisBundle\Event\MultiplayerBoardUpdateEvent;
 
 /**
- * @DI\Service
+ * @DI\Service("game.score_manager")
  *
  * @author Scott Driscoll <scott.driscoll@opensoftdev.com>
  */
@@ -34,6 +36,11 @@ class ScoreManager
     private $horizontalScale;
 
     /**
+     * @var string
+     */
+    private $playerName;
+
+    /**
      * @var int
      */
     private $score = 0;
@@ -42,6 +49,21 @@ class ScoreManager
      * @var int
      */
     private $stage = 0;
+
+    /**
+     * @var string
+     */
+    private $peerName;
+
+    /**
+     * @var int
+     */
+    private $peerScore = 0;
+
+    /**
+     * @var int
+     */
+    private $peerStage = 0;
 
     /**
      * @DI\InjectParams({
@@ -68,10 +90,22 @@ class ScoreManager
      */
     public function draw(RedrawEvent $event)
     {
-        $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 8, ['Score']);
-        $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 9, ["{$this->score}"]);
-        $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 11, ['Stage']);
-        $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 12, ["{$this->stage}"]);
+        if (!empty($this->playerName)) {
+            $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 5, [substr($this->playerName, 0, 14)], 'green');
+        }
+        $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 6, ['Score']);
+        $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 7, ["{$this->score}"]);
+        $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 9, ['Stage']);
+        $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 10, ["{$this->stage}"]);
+
+        if (!empty($this->peerName)) {
+            $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 3, 11, ['----------------']);
+            $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 12, [substr($this->peerName, 0, 14)], 'red');
+            $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 13, ['Score']);
+            $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 14, ["{$this->peerScore}"]);
+            $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 16, ['Stage']);
+            $event->getOutput()->putArrayOfValues($this->width * $this->horizontalScale + 5, 17, ["{$this->peerStage}"]);
+        }
     }
 
     /**
@@ -101,5 +135,43 @@ class ScoreManager
             $this->stage = $stage;
             $this->eventDispatcher->dispatch(Events::STAGE_CLEARED, new StageClearedEvent());
         }
+    }
+
+    /**
+     * @DI\Observe(Events::MESSAGE_PLAYER_CONNECTED, priority = 0)
+     *
+     * @param PlayerConnectedEvent $event
+     */
+    public function peerConnected(PlayerConnectedEvent $event)
+    {
+        $this->playerName = $event->getName();
+        $this->peerName = $event->getPeerName();
+    }
+
+    /**
+     * @DI\Observe(Events::MESSAGE_BOARD_UPDATE, priority = 0)
+     *
+     * @param MultiplayerBoardUpdateEvent $event
+     */
+    public function peerBoardUpdate(MultiplayerBoardUpdateEvent $event)
+    {
+        $this->peerScore = $event->getMessage()->getScore();
+        $this->peerStage = $event->getMessage()->getStage();
+    }
+
+    /**
+     * @return int
+     */
+    public function getPlayerScore()
+    {
+        return $this->score;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPlayerStage()
+    {
+        return $this->stage;
     }
 }

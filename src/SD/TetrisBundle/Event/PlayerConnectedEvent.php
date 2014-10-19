@@ -18,11 +18,18 @@ class PlayerConnectedEvent extends Event
     private $name;
 
     /**
-     * @param string $name
+     * @var string
      */
-    public function __construct($name)
+    private $peerName;
+
+    /**
+     * @param string $name
+     * @param string $peerName
+     */
+    public function __construct($name, $peerName)
     {
         $this->name = $name;
+        $this->peerName = $peerName;
     }
 
     /**
@@ -31,5 +38,13 @@ class PlayerConnectedEvent extends Event
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPeerName()
+    {
+        return $this->peerName;
     }
 }

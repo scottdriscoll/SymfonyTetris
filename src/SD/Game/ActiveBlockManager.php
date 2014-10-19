@@ -106,7 +106,7 @@ class ActiveBlockManager
             if ($this->activeBlock) {
                 $this->activeBlock->setXPosition($this->width / 2);
                 if (!$this->gameBoard->doesBlockFit($this->activeBlock)) {
-                    $this->eventDispatcher->dispatch(Events::GAME_OVER, new GameOverEvent());
+                    $this->eventDispatcher->dispatch(Events::GAME_OVER, new GameOverEvent(false));
                 }
             }
         } else {

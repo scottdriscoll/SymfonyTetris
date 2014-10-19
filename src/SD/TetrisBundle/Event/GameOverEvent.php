@@ -12,5 +12,24 @@ use Symfony\Component\EventDispatcher\Event;
  */
 class GameOverEvent extends Event
 {
+    /**
+     * @var bool
+     */
+    private $playerWins;
 
+    /**
+     * @param $playerWins
+     */
+    public function __construct($playerWins)
+    {
+        $this->playerWins = $playerWins;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getPlayerWins()
+    {
+        return $this->playerWins;
+    }
 }
