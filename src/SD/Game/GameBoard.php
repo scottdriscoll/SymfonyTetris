@@ -15,6 +15,7 @@ use SD\TetrisBundle\Event\BlockMovedEvent;
 use SD\TetrisBundle\Event\NextBlockReadyEvent;
 use SD\TetrisBundle\Event\PlayerConnectedEvent;
 use SD\TetrisBundle\Event\MultiplayerBoardUpdateEvent;
+use SD\TetrisBundle\Event\AddLinesEvent;
 use SD\Game\Block\AbstractBlock;
 use SD\ConsoleHelper\ScreenBuffer;
 use SD\ConsoleHelper\OutputHelper;
@@ -215,6 +216,37 @@ class GameBoard
     public function peerConnected(PlayerConnectedEvent $event)
     {
         $this->peerName = $event->getPeerName();
+    }
+
+    /**
+     * Add random lines to the bottom of the board, removing lines from the top
+     *
+     * @DI\Observe(Events::MESSAGE_ADD_LINES, priority = 0)
+     *
+     * @param AddLinesEvent $event
+     */
+    public function addLines(AddLinesEvent $event)
+    {
+        $lines = $event->getLines();
+        $newBoard = [];
+
+        for ($h = 1; $h <= $this->height - $lines; $h++) {
+            for ($w = 1; $w <= $this->width; $w++) {
+                $newBoard[$h][$w] = $this->board[$h + $lines][$w];
+            }
+        }
+
+        // Add random lines
+        for (; $h <= $this->height; $h++) {
+            for ($w = 1; $w <= $this->width; $w++) {
+                $newBoard[$h][$w] = new GameBoardUnit();
+
+                // 50% chance to add a block
+                if (rand(1, 100) < 50) {
+                    $newBoard[$h][$w]->setOccupied(AbstractBlock::getRandomColor());
+                }
+            }
+        }
     }
 
     private function testForCompletedLines()

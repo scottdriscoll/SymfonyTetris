@@ -25,4 +25,5 @@ final class Events
     const MESSAGE_PLAYER_CONNECTED = 'sd.message.player_connected';
     const MESSAGE_BOARD_UPDATE = 'sd.message.board_update';
     const MESSAGE_PEER_LOSE = 'sd.message.peer_lose';
+    const MESSAGE_ADD_LINES = 'sd.message.add_lines';
 }

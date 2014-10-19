@@ -5,6 +5,7 @@
 
 namespace SD\Game;
 
+use SD\Game\Sockets\Message\AddLinesMessage;
 use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -17,6 +18,7 @@ use SD\TetrisBundle\Event\GameOverEvent;
 use SD\Game\GameBoard;
 use SD\Game\Sockets\Message\GameOverMessage;
 use SD\TetrisBundle\Event\PeerLoseEvent;
+use SD\TetrisBundle\Event\LinesClearedEvent;
 
 /**
  * @DI\Service("game.multiplayer_controller")
@@ -146,6 +148,25 @@ class MultiPlayerController
     public function peerLose(PeerLoseEvent $event)
     {
         $this->playerWins = true;
+    }
+
+    /**
+     * @DI\Observe(Events::LINES_CLEARED, priority = 0)
+     *
+     * @param LinesClearedEvent $event
+     */
+    public function linesCleared(LinesClearedEvent $event)
+    {
+        $linesCleared = $event->getLinesClearedCount();
+
+        if ($linesCleared < 2) {
+            return;
+        }
+
+        $message = new AddLinesMessage($linesCleared);
+        $message->setCritical(true);
+
+        $this->udp2p->sendMessage($message);
     }
 
     /**

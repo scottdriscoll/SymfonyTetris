@@ -145,4 +145,11 @@ abstract class AbstractBlock
 
         return $coordinates;
     }
+
+    public static function getRandomColor()
+    {
+        static $colors = ['red', 'magenta', 'yellow', 'cyan', 'blue', 'green'];
+
+        return $colors[rand(0, 5)];
+    }
 }

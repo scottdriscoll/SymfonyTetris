@@ -14,12 +14,14 @@ use SD\Game\Sockets\Message\ConnectionMessage;
 use SD\Game\Sockets\Message\CriticalMessage;
 use SD\Game\Sockets\Message\GameOverMessage;
 use SD\Game\Sockets\Message\BoardUpdateMessage;
-use SD\TetrisBundle\Event\MultiplayerBoardUpdateEvent;
+use SD\Game\Sockets\Message\AddLinesMessage;
 use SD\TetrisBundle\Events;
+use SD\TetrisBundle\Event\MultiplayerBoardUpdateEvent;
 use SD\TetrisBundle\Event\HeartbeatEvent;
 use SD\TetrisBundle\Event\GameOverEvent;
 use SD\TetrisBundle\Event\PlayerConnectedEvent;
 use SD\TetrisBundle\Event\PeerLoseEvent;
+use SD\TetrisBundle\Event\AddLinesEvent;
 
 /**
  * Class to implement simple peer to peer communication over UDP
@@ -150,13 +152,20 @@ class Udp2p
             return;
         }
 
-        if ($message->isCritical()) {
-            $messageId = $message->getObjectId();
-            $this->sendAck($messageId);
-            $this->storeCriticalReceive($messageId);
-        }
+        if ($message instanceof AcknowledgeMessage) {
+            $messageId = $message->getAcknowledgedMessageId();
+            if (isset($this->criticalSend[$messageId])) {
+                unset($this->criticalSend[$messageId]);
+            }
+        } else {
+            if ($message->isCritical()) {
+                $messageId = $message->getObjectId();
+                $this->sendAck($messageId);
+                $this->storeCriticalReceive($messageId);
+            }
 
-        $this->fireEvent($message);
+            $this->fireEvent($message);
+        }
     }
 
     /**
@@ -289,6 +298,8 @@ class Udp2p
             $this->eventDispatcher->dispatch(Events::GAME_OVER, new GameOverEvent(GameOverEvent::SOURCE_PEER));
         } elseif ($message instanceof ConnectionMessage) {
             $this->eventDispatcher->dispatch(Events::MESSAGE_PLAYER_CONNECTED, new PlayerConnectedEvent($this->name, $message->getName()));
+        } elseif ($message instanceof AddLinesMessage) {
+            $this->eventDispatcher->dispatch(Events::MESSAGE_ADD_LINES, new AddLinesEvent($message->getLines()));
         }
     }
 }
