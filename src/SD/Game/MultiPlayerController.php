@@ -121,7 +121,11 @@ class MultiPlayerController
      */
     public function gameOver(GameOverEvent $event)
     {
-        if (!$event->getPlayerWins()) {
+        if (!$this->udp2p->isConnected()) {
+            return;
+        }
+
+        if ($event->getSource() == GameOverEvent::SOURCE_SELF) {
             $message = new GameOverMessage();
             $message->setCritical(true);
             $this->udp2p->sendMessage($message);

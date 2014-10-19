@@ -12,24 +12,28 @@ use Symfony\Component\EventDispatcher\Event;
  */
 class GameOverEvent extends Event
 {
-    /**
-     * @var bool
-     */
-    private $playerWins;
+    const SOURCE_SELF = 'self';
+
+    const SOURCE_PEER = 'peer';
 
     /**
-     * @param $playerWins
+     * @var string
      */
-    public function __construct($playerWins)
+    private $source;
+
+    /**
+     * @param $source
+     */
+    public function __construct($source)
     {
-        $this->playerWins = $playerWins;
+        $this->source = $source;
     }
 
     /**
-     * @return bool
+     * @return string
      */
-    public function getPlayerWins()
+    public function getSource()
     {
-        return $this->playerWins;
+        return $this->source;
     }
 }

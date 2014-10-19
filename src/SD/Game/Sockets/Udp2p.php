@@ -19,6 +19,7 @@ use SD\TetrisBundle\Events;
 use SD\TetrisBundle\Event\HeartbeatEvent;
 use SD\TetrisBundle\Event\GameOverEvent;
 use SD\TetrisBundle\Event\PlayerConnectedEvent;
+use SD\TetrisBundle\Event\PeerLoseEvent;
 
 /**
  * Class to implement simple peer to peer communication over UDP
@@ -284,8 +285,8 @@ class Udp2p
         if ($message instanceof BoardUpdateMessage) {
             $this->eventDispatcher->dispatch(Events::MESSAGE_BOARD_UPDATE, new MultiplayerBoardUpdateEvent($message));
         } elseif ($message instanceof GameOverMessage) {
-            die("got game over message");
-            $this->eventDispatcher->dispatch(Events::GAME_OVER, new GameOverEvent(true));
+            $this->eventDispatcher->dispatch(Events::MESSAGE_PEER_LOSE, new PeerLoseEvent());
+            $this->eventDispatcher->dispatch(Events::GAME_OVER, new GameOverEvent(GameOverEvent::SOURCE_PEER));
         } elseif ($message instanceof ConnectionMessage) {
             $this->eventDispatcher->dispatch(Events::MESSAGE_PLAYER_CONNECTED, new PlayerConnectedEvent($this->name, $message->getName()));
         }

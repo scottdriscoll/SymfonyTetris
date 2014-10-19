@@ -14,7 +14,7 @@ use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\Question;
 use SD\Game\Sockets\Udp2p;
 use SD\TetrisBundle\Events;
-use SD\TetrisBundle\Event\GameOverEvent;
+use SD\TetrisBundle\Event\PeerLoseEvent;
 use SD\ConsoleHelper\OutputHelper;
 
 /**
@@ -81,12 +81,12 @@ class GameCommand extends ContainerAwareCommand
     }
 
     /**
-     * @DI\Observe(Events::GAME_OVER, priority = 0)
+     * @DI\Observe(Events::MESSAGE_PEER_LOSE, priority = 0)
      *
-     * @param GameOverEvent $event
+     * @param PeerLoseEvent $event
      */
-    public function gameOver(GameOverEvent $event)
+    public function peerLose(PeerLoseEvent $event)
     {
-        $this->userWin = $event->getPlayerWins();
+        $this->userWin = true;
     }
 }
