@@ -143,6 +143,8 @@ class Udp2p
      */
     public function readIncomingMessage(HeartbeatEvent $event)
     {
+        $fireEvent = true;
+
         if (null === $this->socket) {
             return;
         }
@@ -161,10 +163,12 @@ class Udp2p
             if ($message->isCritical()) {
                 $messageId = $message->getObjectId();
                 $this->sendAck($messageId);
-                $this->storeCriticalReceive($messageId);
+                $fireEvent = $this->storeCriticalReceive($messageId);
             }
 
-            $this->fireEvent($message);
+            if ($fireEvent) {
+                $this->fireEvent($message);
+            }
         }
     }
 
@@ -245,13 +249,21 @@ class Udp2p
     }
 
     /**
+     * return false if we already know about this message
+     *
      * @param string $messageId
+     *
+     * @return bool
      */
     private function storeCriticalReceive($messageId)
     {
         if (!isset($this->criticalSend[$messageId])) {
             $this->criticalReceive[$messageId] = new CriticalMessage();
+
+            return true;
         }
+
+        return false;
     }
 
     /**
