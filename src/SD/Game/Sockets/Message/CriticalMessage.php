@@ -59,4 +59,10 @@ class CriticalMessage
     {
         $this->message = $message;
     }
+
+    public function restartTimer()
+    {
+        $this->stopwatch = new Stopwatch();
+        $this->stopwatch->start(self::STOPWATCH_NAME);
+    }
 }

@@ -183,6 +183,7 @@ class Udp2p
         foreach ($this->criticalSend as $messageId => $message) {
             if ($message->getElapsedTime() >= self::MESSAGE_RESEND_FREQUENCY) {
                 $this->sendMessage($message->getMessage());
+                $message->restartTimer();
             }
         }
     }
