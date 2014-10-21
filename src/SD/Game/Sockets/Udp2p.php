@@ -257,7 +257,7 @@ class Udp2p
      */
     private function storeCriticalReceive($messageId)
     {
-        if (!isset($this->criticalSend[$messageId])) {
+        if (!isset($this->criticalReceive[$messageId])) {
             $this->criticalReceive[$messageId] = new CriticalMessage();
 
             return true;
