@@ -35,3 +35,23 @@ services:
 
 parameters:
     horizontal_scale: 2
+
+# Doctrine Configuration
+doctrine:
+    dbal:
+        driver:   "pdo_sqlite"
+        host:     "localhost"
+        port: ~
+        dbname:   "leader_board"
+        user:     "root"
+        password: ~
+        charset:  UTF8
+        path: "%kernel.root_dir%/data/sqlite.db3"
+    orm:
+        auto_generate_proxy_classes: "%kernel.debug%"
+        default_entity_manager: default
+        entity_managers:
+          default:
+            connection: default
+            mappings:
+              SDTetrisBundle: ~

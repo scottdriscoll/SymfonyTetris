@@ -1,0 +1,7 @@
+services:
+    gamescore_repository:
+        class: SD\TetrisBundle\Entity\GameScoreRepository
+        factory_service: doctrine.orm.entity_manager
+        factory_method: getRepository
+        arguments:
+            - SD\TetrisBundle\Entity\GameScore

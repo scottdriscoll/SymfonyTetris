@@ -13,6 +13,8 @@ use SD\TetrisBundle\Event\LinesClearedEvent;
 use SD\TetrisBundle\Event\StageClearedEvent;
 use SD\TetrisBundle\Event\PlayerConnectedEvent;
 use SD\TetrisBundle\Event\MultiplayerBoardUpdateEvent;
+use SD\TetrisBundle\Event\GameOverEvent;
+use SD\TetrisBundle\Event\ScoreTalliedEvent;
 
 /**
  * @DI\Service("game.score_manager")
@@ -157,6 +159,16 @@ class ScoreManager
     {
         $this->peerScore = $event->getMessage()->getScore();
         $this->peerStage = $event->getMessage()->getStage();
+    }
+
+    /**
+     * @DI\Observe(Events::GAME_OVER, priority = 0)
+     *
+     * @param GameOverEvent $event
+     */
+    public function gameOver(GameOverEvent $event)
+    {
+        $this->eventDispatcher->dispatch(Events::SCORE_TALLIED, new ScoreTalliedEvent($this->score, $this->peerName, $this->peerScore));
     }
 
     /**

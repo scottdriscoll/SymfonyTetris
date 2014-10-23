@@ -23,6 +23,7 @@ final class Events
     const NEXT_BLOCK_READY = 'sd.next_block_ready';
     const LINES_CLEARED = 'sd.lines_cleared';
     const STAGE_CLEARED = 'sd.stage_cleared';
+    const SCORE_TALLIED = 'sd.score_tallied';
     const MESSAGE_PLAYER_CONNECTED = 'sd.message.player_connected';
     const MESSAGE_BOARD_UPDATE = 'sd.message.board_update';
     const MESSAGE_PEER_LOSE = 'sd.message.peer_lose';
