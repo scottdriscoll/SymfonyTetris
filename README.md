@@ -22,6 +22,7 @@ Clear multiple lines to add lines to your opponents board. For every line (over 
 ### Optional Leaderboard
 
 If you would like to store your scores to a local sqlite database, complete the following steps:
+
 * Make sure `php5_sqlite` is installed
 * Create directory `app/data` and make sure it is writable
 * run: `app/console doctrine:database:create`
