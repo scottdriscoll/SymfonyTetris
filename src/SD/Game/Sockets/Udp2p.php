@@ -83,6 +83,11 @@ class Udp2p
     private $name;
 
     /**
+     * @var int
+     */
+    private $lastMessageId = 0;
+
+    /**
      * @DI\InjectParams({
      *     "eventDispatcher" = @DI\Inject("event_dispatcher")
      * })
@@ -217,7 +222,7 @@ class Udp2p
             return;
         }
 
-        $messageId = spl_object_hash($message);
+        $messageId = ++$this->lastMessageId;
         $message->setObjectId($messageId);
         $serializedMessage = serialize($message);
 
