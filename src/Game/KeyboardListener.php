@@ -31,10 +31,17 @@ class KeyboardListener
      */
     private $keyboardHelper;
 
+    private bool $enabled = true;
+
     public function __construct(EventDispatcherInterface $eventDispatcher, KeyboardHelper $keyboardHelper)
     {
         $this->eventDispatcher = $eventDispatcher;
         $this->keyboardHelper = $keyboardHelper;
+    }
+
+    public function setEnabled(bool $enabled): void
+    {
+        $this->enabled = $enabled;
     }
 
     /**
@@ -43,6 +50,10 @@ class KeyboardListener
     #[AsEventListener]
     public function processKeyboardEvents(HeartbeatEvent $event)
     {
+        if (!$this->enabled) {
+            return;
+        }
+
         if (($key = $this->keyboardHelper->readKey()) !== null) {
             switch ($key) {
                 case KeyboardHelper::LEFT_ARROW:

@@ -9,6 +9,7 @@ use App\Game\Engine;
 use App\Game\GameBoard;
 use App\Game\LeaderBoardManager;
 use App\Game\MultiPlayerController;
+use App\Tui\TetrisTuiRunner;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -38,6 +39,7 @@ class GameCommand extends Command
         private readonly MultiPlayerController $multiPlayerController,
         private readonly LeaderBoardManager $leaderBoardManager,
         private readonly Udp2p $udp2p,
+        private readonly TetrisTuiRunner $tetrisTuiRunner,
         private readonly int $boardWidth,
         private readonly int $boardHeight,
     ) {
@@ -84,6 +86,12 @@ class GameCommand extends Command
 
                 return Command::FAILURE;
             }
+        } else {
+            $this->tetrisTuiRunner->run();
+
+            $output->writeln("\n\n<fg=red>*** You lose. ***\n\n</fg=red>");
+
+            return Command::SUCCESS;
         }
 
         $outputHelper = new OutputHelper($output);

@@ -103,4 +103,9 @@ class NextBlockManager
 
         return $block;
     }
+
+    public function peekNextBlock()
+    {
+        return $this->nextBlock;
+    }
 }

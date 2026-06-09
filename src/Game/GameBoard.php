@@ -92,15 +92,19 @@ class GameBoard
     }
 
     /**
-     * @param OutputHelper $output
      * @param string $name
      */
-    public function initialize(OutputHelper $output, $name = null)
+    public function initialize(?OutputHelper $output = null, $name = null)
     {
         $multiplier = null === $name ? 1 : 2;
         $this->output = $output;
-        $this->buffer->initialize($multiplier * $this->width * $this->horizontalScale + 30, $this->height + 5);
+        if (null !== $output) {
+            $this->buffer->initialize($multiplier * $this->width * $this->horizontalScale + 30, $this->height + 5);
+        }
         $this->name = $name;
+        $this->board = [];
+        $this->peerBoard = [];
+        $this->peerBlock = null;
 
         for ($h = 1; $h <= $this->height; $h++) {
             for ($w = 1; $w <= $this->width; $w++) {
@@ -115,7 +119,9 @@ class GameBoard
     #[AsEventListener]
     public function screenDirty(BlockMovedEvent $event)
     {
-        $this->drawBoard();
+        if (null !== $this->output) {
+            $this->drawBoard();
+        }
     }
 
     /**
@@ -124,7 +130,9 @@ class GameBoard
     #[AsEventListener]
     public function nextBlockReady(NextBlockReadyEvent $event)
     {
-        $this->drawBoard();
+        if (null !== $this->output) {
+            $this->drawBoard();
+        }
     }
 
     /**
