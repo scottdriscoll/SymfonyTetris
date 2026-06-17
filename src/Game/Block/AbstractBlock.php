@@ -98,17 +98,18 @@ abstract class AbstractBlock
      * @param ScreenBuffer $buffer
      * @param int $horizontalScale
      */
-    public function draw(ScreenBuffer $buffer, $horizontalScale)
+    public function draw(ScreenBuffer $buffer, $horizontalScale, ?string $backgroundColor = null)
     {
         $shapes = $this->block[$this->currentIndex]['shapes'];
         $y = $this->yPosition;
+        $backgroundColor ??= $this->color;
 
         foreach ($shapes as $row) {
             for ($i = 0; $i < strlen($row); $i++) {
                 if (substr($row, $i, 1) === '.') {
                     for ($j = 0; $j < $horizontalScale; $j++) {
                         $x = ($this->xPosition + $i) * $horizontalScale + $j - 1;
-                        $buffer->putNextValue($x, $y, ' ', null, $this->color);
+                        $buffer->putNextValue($x, $y, ' ', null, $backgroundColor);
                     }
                 }
             }

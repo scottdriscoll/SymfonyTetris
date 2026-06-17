@@ -120,6 +120,11 @@ class ActiveBlockManager
     public function draw(RedrawEvent $event)
     {
         if ($this->activeBlock) {
+            if ($this->gameBoard->isLandingPreviewEnabled()) {
+                $landingPreviewBlock = $this->gameBoard->getLandingPreviewBlock($this->activeBlock);
+                $landingPreviewBlock->draw($event->getOutput(), $this->horizontalScale, 'gray');
+            }
+
             $this->activeBlock->draw($event->getOutput(), $this->horizontalScale);
         }
     }

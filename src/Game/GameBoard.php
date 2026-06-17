@@ -15,6 +15,7 @@ use App\Event\NextBlockReadyEvent;
 use App\Event\PlayerConnectedEvent;
 use App\Event\MultiplayerBoardUpdateEvent;
 use App\Event\AddLinesEvent;
+use App\Event\KeyboardToggleLandingPreviewEvent;
 use App\Game\Block\AbstractBlock;
 use SD\ConsoleHelper\ScreenBuffer;
 use SD\ConsoleHelper\OutputHelper;
@@ -82,6 +83,8 @@ class GameBoard
      */
     private $peerName;
 
+    private bool $landingPreviewEnabled = true;
+
     public function __construct(EventDispatcherInterface $eventDispatcher, ScreenBuffer $buffer, $width, $height, $horizontalScale)
     {
         $this->eventDispatcher = $eventDispatcher;
@@ -105,6 +108,7 @@ class GameBoard
         $this->board = [];
         $this->peerBoard = [];
         $this->peerBlock = null;
+        $this->landingPreviewEnabled = true;
 
         for ($h = 1; $h <= $this->height; $h++) {
             for ($w = 1; $w <= $this->width; $w++) {
@@ -172,6 +176,37 @@ class GameBoard
         }
 
         return true;
+    }
+
+    public function getLandingPreviewBlock(AbstractBlock $block): AbstractBlock
+    {
+        $previewBlock = clone $block;
+
+        while (true) {
+            $nextPosition = clone $previewBlock;
+            $nextPosition->setYPosition($nextPosition->getYPosition() + 1);
+
+            if (!$this->doesBlockFit($nextPosition)) {
+                return $previewBlock;
+            }
+
+            $previewBlock = $nextPosition;
+        }
+    }
+
+    public function isLandingPreviewEnabled(): bool
+    {
+        return $this->landingPreviewEnabled;
+    }
+
+    #[AsEventListener]
+    public function toggleLandingPreview(KeyboardToggleLandingPreviewEvent $event): void
+    {
+        $this->landingPreviewEnabled = !$this->landingPreviewEnabled;
+
+        if (null !== $this->output) {
+            $this->drawBoard();
+        }
     }
 
     /**
@@ -297,6 +332,8 @@ class GameBoard
             $this->buffer->putArrayOfValues(0, $this->height + 2, [$this->name], 'green');
             $this->buffer->putArrayOfValues($this->width * $this->horizontalScale + self::PEER_BOARD_OFFSET, $this->height + 2, [$this->peerName], 'red');
         }
+
+        $this->buffer->putArrayOfValues(0, $this->height + 3, [sprintf('h toggles preview (%s)', $this->landingPreviewEnabled ? 'on' : 'off')]);
 
         $this->drawBoardArray($this->board, 0);
         if (!empty($this->peerBoard)) {

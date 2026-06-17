@@ -36,7 +36,7 @@ final class TetrisDashboardWidget extends AbstractWidget
 
         $lines = [
             "\033[1mSymfony Tetris\033[0m",
-            'Arrows move, space rotates, q quits',
+            sprintf('Arrows move, space rotates, h toggles preview (%s), q quits', $this->previewStatus($this->state->landingPreviewEnabled)),
             '',
         ];
 
@@ -72,6 +72,14 @@ final class TetrisDashboardWidget extends AbstractWidget
         }
 
         if (null !== $state->activeBlock) {
+            if (null !== $state->landingPreviewBlock) {
+                foreach ($state->landingPreviewBlock->getVisibleCoordinates() as $coordinate) {
+                    if ($coordinate['y'] >= 1 && $coordinate['y'] <= $state->height && $coordinate['x'] >= 1 && $coordinate['x'] <= $state->width) {
+                        $colors[$coordinate['y']][$coordinate['x']] = 'light_gray';
+                    }
+                }
+            }
+
             foreach ($state->activeBlock->getVisibleCoordinates() as $coordinate) {
                 if ($coordinate['y'] >= 1 && $coordinate['y'] <= $state->height && $coordinate['x'] >= 1 && $coordinate['x'] <= $state->width) {
                     $colors[$coordinate['y']][$coordinate['x']] = $state->activeBlock->getColor();
@@ -144,9 +152,15 @@ final class TetrisDashboardWidget extends AbstractWidget
             'cyan' => 46,
             'blue' => 44,
             'green' => 42,
+            'light_gray' => 47,
             default => 40,
         };
 
         return "\033[{$code}m  \033[0m";
+    }
+
+    private function previewStatus(bool $enabled): string
+    {
+        return $enabled ? 'on' : 'off';
     }
 }

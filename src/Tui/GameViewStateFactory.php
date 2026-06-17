@@ -24,6 +24,8 @@ final readonly class GameViewStateFactory
     {
         $board = $this->gameBoard->getBoard();
         $activeBlock = $this->activeBlockManager->getActiveBlock();
+        $landingPreviewEnabled = $this->gameBoard->isLandingPreviewEnabled();
+        $landingPreviewBlock = null === $activeBlock || !$landingPreviewEnabled ? null : $this->gameBoard->getLandingPreviewBlock($activeBlock);
         $nextBlock = $this->nextBlockManager->peekNextBlock();
         $score = $this->scoreManager->getPlayerScore();
         $stage = $this->scoreManager->getPlayerStage();
@@ -31,19 +33,21 @@ final readonly class GameViewStateFactory
         return new GameViewState(
             $board,
             $activeBlock,
+            $landingPreviewBlock,
             $nextBlock,
             $score,
             $stage,
             $this->boardWidth,
             $this->boardHeight,
-            $this->buildSignature($board, $activeBlock, $nextBlock, $score, $stage, $gameOver),
+            $this->buildSignature($board, $activeBlock, $nextBlock, $score, $stage, $landingPreviewEnabled, $gameOver),
+            $landingPreviewEnabled,
             $gameOver,
         );
     }
 
-    private function buildSignature(array $board, ?AbstractBlock $activeBlock, ?AbstractBlock $nextBlock, int $score, int $stage, bool $gameOver): string
+    private function buildSignature(array $board, ?AbstractBlock $activeBlock, ?AbstractBlock $nextBlock, int $score, int $stage, bool $landingPreviewEnabled, bool $gameOver): string
     {
-        $parts = [$score, $stage, $gameOver ? '1' : '0'];
+        $parts = [$score, $stage, $landingPreviewEnabled ? '1' : '0', $gameOver ? '1' : '0'];
 
         foreach ($board as $row) {
             foreach ($row as $unit) {

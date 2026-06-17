@@ -8,6 +8,7 @@ use App\Event\KeyboardDownEvent;
 use App\Event\KeyboardLeftEvent;
 use App\Event\KeyboardRightEvent;
 use App\Event\KeyboardRotateEvent;
+use App\Event\KeyboardToggleLandingPreviewEvent;
 use App\Event\UserClosedEvent;
 use App\Game\GameBoard;
 use App\Game\KeyboardListener;
@@ -53,6 +54,7 @@ final readonly class TetrisTuiRunner
                 Key::RIGHT => new KeyboardRightEvent(),
                 Key::DOWN => new KeyboardDownEvent(),
                 Key::SPACE => new KeyboardRotateEvent(),
+                'h', 'H' => new KeyboardToggleLandingPreviewEvent(),
                 Key::ESCAPE, 'q', Key::ctrl('c') => new UserClosedEvent(),
                 default => null,
             };

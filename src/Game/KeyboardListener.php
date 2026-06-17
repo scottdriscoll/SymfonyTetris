@@ -12,6 +12,7 @@ use App\Event\KeyboardLeftEvent;
 use App\Event\KeyboardRightEvent;
 use App\Event\KeyboardDownEvent;
 use App\Event\KeyboardRotateEvent;
+use App\Event\KeyboardToggleLandingPreviewEvent;
 use SD\ConsoleHelper\Keyboard as KeyboardHelper;
 
 /**
@@ -20,6 +21,7 @@ use SD\ConsoleHelper\Keyboard as KeyboardHelper;
 class KeyboardListener
 {
     const KEY_ROTATE = ' ';
+    const KEY_TOGGLE_LANDING_PREVIEW = 'h';
 
     /**
      * @var EventDispatcherInterface $eventDispatcher
@@ -70,6 +72,11 @@ class KeyboardListener
 
                 case self::KEY_ROTATE:
                     $this->eventDispatcher->dispatch(new KeyboardRotateEvent());
+                    break;
+
+                case self::KEY_TOGGLE_LANDING_PREVIEW:
+                case strtoupper(self::KEY_TOGGLE_LANDING_PREVIEW):
+                    $this->eventDispatcher->dispatch(new KeyboardToggleLandingPreviewEvent());
                     break;
             }
         }
